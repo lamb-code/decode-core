@@ -1,4 +1,5 @@
 import { compileToFunction } from "./compiler";
+import { mountComponent } from "./lifeCycle";
 import { initState } from "./state";
 
 //主要为Vue增加_init方法
@@ -34,6 +35,7 @@ export function initMixin(Vue) {
         opts.render = render;
       }
     }
+    mountComponent(vm, el); //组件挂载
     // opts.render
   };
 }
