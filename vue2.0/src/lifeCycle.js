@@ -1,3 +1,4 @@
+import Watcher from "./observe/watcher";
 import { createElementVNode, createTextVNode } from "./vdom";
 function createElm(vnode) {
   let { tag, data, children, text } = vnode;
@@ -68,8 +69,13 @@ export function lifecycleMixin(Vue) {
 export function mountComponent(vm, el) {
   //挂载元素分三步：
   vm.$el = el;
-  //1. 调用render方法生成虚拟DOM
-  vm._update(vm._render());
+  const updateComponent = () => {
+    //1. 调用render方法生成虚拟DOM
+
+    vm._update(vm._render());
+  };
+  new Watcher(vm, updateComponent,true);
+
   //2.根据虚拟DOM生成真实DOM
   //3.插入到el元素中
 }
