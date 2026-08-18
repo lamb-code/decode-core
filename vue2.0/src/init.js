@@ -1,3 +1,4 @@
+import { compileToFunction } from "./compiler";
 import { initState } from "./state";
 
 //主要为Vue增加_init方法
@@ -10,5 +11,29 @@ export function initMixin(Vue) {
     vm.$options = options;
     //初始化状态(包括data props，watch computed... )
     initState(vm);
+    if (options.el) {
+      vm.$mount(options.el);
+    }
+  };
+  Vue.prototype.$mount = function (el) {
+    const vm = this;
+    el = document.querySelector(el);
+    const opts = vm.$options;
+    if (!opts.render) {
+      let template;
+      if (!opts.template && el) {
+        template = el.outerHTML;
+      } else {
+        if (el) {
+          template = opts.template;
+        }
+      }
+      if (template) {
+        //将模板字符串编译成render函数
+        const render = compileToFunction(template);
+        opts.render = render;
+      }
+    }
+    // opts.render
   };
 }

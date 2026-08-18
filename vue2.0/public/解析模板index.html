@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app">
+      <div>{{name}}</div>
+      <span>{{age}}</span>
+    </div>
+    <script src="../dist/umd/vue.js"></script>
+    <script>
+      console.log(Vue);
+      const vm = new Vue({
+        data: {
+          name: "JaneTau",
+          age: 20,
+        },
+        el: "#app", //我们需要将数据解析到el元素上
+        // template:'<div>{{name}}</div>'
+        // render(h) {
+        //     return h('div',{})
+        // },
+      });
+      console.log(vm);
+      //模板引擎 性能差 需要正则匹配， 1.0的时候 没有引入虚拟DOM的改变
+      //2.0 采用虚拟DOM 数据变化比较虚拟DOM的差异 最后更新需要更新的地方
+      //3.0 核心就是我们需哟将模板变成我们的JS语法 通过JS语法生成虚拟DOM
+      // 从一个东西变成另一个东西 语法之间的转化 需要先变成语法树再重新组装成为新的语法,将temlate语法变成render函数
+    </script>
+  </body>
+</html>
