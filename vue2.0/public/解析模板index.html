@@ -8,12 +8,11 @@
 
   <body>
     <div id="app">
-      <div>{{name}}</div>
+      <div style="color: red;">{{name}}</div>
       <span>{{age}}</span>
     </div>
     <script src="../dist/umd/vue.js"></script>
     <script>
-      console.log(Vue);
       const vm = new Vue({
         data: {
           name: "JaneTau",
@@ -25,7 +24,6 @@
         //     return h('div',{})
         // },
       });
-      console.log(vm);
       //模板引擎 性能差 需要正则匹配， 1.0的时候 没有引入虚拟DOM的改变
       //2.0 采用虚拟DOM 数据变化比较虚拟DOM的差异 最后更新需要更新的地方
       //3.0 核心就是我们需哟将模板变成我们的JS语法 通过JS语法生成虚拟DOM
