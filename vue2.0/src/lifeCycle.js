@@ -25,14 +25,14 @@ function patchProps(el, props) {
   }
 }
 function patch(oldVNode, vnode) {
-  console.log(oldVNode, vnode, "............");
+//   console.log(oldVNode, vnode, "............");
   const isRealElement = oldVNode.nodeType;
   //写的还是初渲染
   if (isRealElement) {
     const ele = oldVNode;
     const parentEle = ele.parentNode;
     const newElm = createElm(vnode);
-    console.log(newElm, "newElm");
+    // console.log(newElm, "newElm");
     parentEle.insertBefore(newElm, ele.nextSibling);
     parentEle.removeChild(ele);
     return newElm;

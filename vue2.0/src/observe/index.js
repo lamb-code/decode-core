@@ -38,7 +38,7 @@ export function defineReactive(target, key, value) {
   Object.defineProperty(target, key, {
     //取值的时候执行get
     get() {
-      console.log("取值02");
+      // console.log("取值02");
       if(Dep.target){
         dep.depend()
       }

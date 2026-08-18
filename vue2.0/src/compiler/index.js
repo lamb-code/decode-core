@@ -51,7 +51,7 @@ function gen(node) {
   }
 }
 function codegen(ast) {
-  console.log(ast, "ast");
+  // console.log(ast, "ast");
   const children = genChildren(ast.children);
   let code = `_c('${ast.tag}',${
     ast.attrs.length > 0 ? genProps(ast.attrs) : "null"
@@ -62,7 +62,7 @@ export function compileToFunction(template) {
   //   console.log(template, "template");
   //第一步 将template 转化成ast语法树
   let ast = parserHTML(template);
-  console.log(ast, "ast");
+  // console.log(ast, "ast");
   //第二步 生成render方法(render方法执行后的返回结果就是虚拟DOM)
 
   let code = codegen(ast);

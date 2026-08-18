@@ -38,7 +38,7 @@ export function parserHTML(html) {
     currentParent = node;
   }
   function end(tagName) {
-    console.log("end", tagName);
+    // console.log("end", tagName);
     stack.pop();
     currentParent = stack[stack.length - 1];
   }

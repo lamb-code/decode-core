@@ -28,7 +28,54 @@ class Watcher {
     Dep.target = null;
   }
   update() {
+    queueWatcher(this); //把当前的watcher暂存起来
+    // this.get();
+  }
+  run() {
     this.get();
+  }
+}
+let queue = [];
+let has = {};
+let pending = false; //防抖变量
+function flushSchedulerQueue() {
+  let flushQueue = queue.slice(0);
+  queue = [];
+  pending = false;
+  has = {};
+  flushQueue.forEach((q) => q.run());
+}
+function queueWatcher(watcher) {
+  const id = watcher.id;
+  if (!has[id]) {
+    queue.push(watcher);
+    has[id] = true;
+    console.log(queue);
+    //不管update执行多少次，但是最终只执行一次更新操作 即防抖
+    if (!pending) {
+        // setTimeout(flushSchedulerQueue, 0);
+        
+      nextTick(flushSchedulerQueue,0);
+      pending = true;
+    }
+  }
+}
+let callbacks = [];
+let waiting = false;
+function flushCallbacks() {
+  const cbs = callbacks.slice(0)
+  callbacks = [];
+  waiting = false;
+  cbs.forEach((cb) => cb());
+}
+export function nextTick(cb) {
+  callbacks.push(cb);
+  if (!waiting) {
+    setTimeout(() => {
+        
+      flushCallbacks();
+    }, 0);
+    waiting = true;
   }
 }
 export default Watcher;
