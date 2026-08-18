@@ -25,7 +25,7 @@ function patchProps(el, props) {
   }
 }
 function patch(oldVNode, vnode) {
-//   console.log(oldVNode, vnode, "............");
+  //   console.log(oldVNode, vnode, "............");
   const isRealElement = oldVNode.nodeType;
   //写的还是初渲染
   if (isRealElement) {
@@ -74,8 +74,16 @@ export function mountComponent(vm, el) {
 
     vm._update(vm._render());
   };
-  new Watcher(vm, updateComponent,true);
+  new Watcher(vm, updateComponent, true);
 
   //2.根据虚拟DOM生成真实DOM
   //3.插入到el元素中
+}
+export function callHook(vm, hook) {
+  let handlers = vm.$options[hook];
+  if (handlers) {
+    handlers.forEach((fn) => {
+      fn.call(vm); // 生命周期的this 永远指向实例
+    });
+  }
 }

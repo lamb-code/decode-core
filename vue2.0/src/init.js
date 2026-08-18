@@ -1,6 +1,7 @@
 import { compileToFunction } from "./compiler";
-import { mountComponent } from "./lifeCycle";
+import { callHook, mountComponent } from "./lifeCycle";
 import { initState } from "./state";
+import { mergeOptions } from "./utils";
 
 //主要为Vue增加_init方法
 export function initMixin(Vue) {
@@ -9,9 +10,16 @@ export function initMixin(Vue) {
     //把用户的选项放vm实例上， 这样在其他方法中都可以获取到options
     //为什么用$开头命名,$data,$nextTick $atrrs... $表示Vue内部变量
     const vm = this;
-    vm.$options = options;
+    // vm.$options = options;
+    vm.$options = mergeOptions(this.constructor.options, options);
+
+    callHook(vm,'beforeCreate') //这就是我们使用vue时的生命周期钩子
+
     //初始化状态(包括data props，watch computed... )
     initState(vm);
+    
+    callHook(vm,'created') //这就是我们使用vue时的生命周期钩子
+
     if (options.el) {
       vm.$mount(options.el);
     }
