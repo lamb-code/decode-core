@@ -22,43 +22,47 @@
     //   watch,
     // } from "/node_modules/vue/dist/vue.esm-browser.js";
 
-    console.log(watch);
+    // console.log(watch);
     // 自己的
     import {
       reactive,
-      effect,
-      ref,
-      toRef,
-      toRefs,
-      computed,
+      // effect,
+      // ref,
+      // toRef,
+      // toRefs,
+      // computed,
     } from "../dist/reactivity.js";
 
     // computed 计算属性
     // computed 执行后的结果是一个ref 不可变的
-    const state = reactive({ name: "jw" });
+    const obj ={name:'jane'}
+    const state1 = reactive(obj);
+    const state2 = reactive(state1);
+    console.log(state1.__v_isReactive)
+    console.log(state1===state2)
 
-    // dirty = true
-    const aliasName = computed({
-      get(oldValue) {
-        console.log("runner", oldValue);
-        return "**" + state.name;
-      },
-      set(v) {
-        console.log(v); // 可以通过aliasName.value =  新值
-      },
-    });
-    // 多次方位此属性 只会执行一次
+    // // dirty = true
+    // const aliasName = computed({
+    //   get(oldValue) {
+    //     console.log("runner", oldValue);
+    //     return "**" + state.name;
+    //   },
+    //   set(v) {
+    //     console.log(v); // 可以通过aliasName.value =  新值
+    //   },
+    // });
+    // // 多次方位此属性 只会执行一次
 
-    effect(() => {
-      // template
-      console.log(aliasName.value);
-      console.log(aliasName.value);
-      console.log(aliasName.value);
-    });
+    // effect(() => {
+    //   // template
+    //   console.log(aliasName.value);
+    //   console.log(aliasName.value);
+    //   console.log(aliasName.value);
+    // });
 
-    setTimeout(() => {
-      state.name = "jw";
-    }, 1000);
+    // setTimeout(() => {
+    //   state.name = "jw";
+    // }, 1000);
 
     // 描述实现原理：
     // 1.计算属性维护了一个dirty属性，默认就是true，稍后运行过一次会将dirty变为false，并且稍后依赖的值变化后会再次让dirty变为true

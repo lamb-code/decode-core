@@ -1,2 +1,2 @@
-const testa = 100;
-export default testa
+export * from './effect'
+export * from './reactive'

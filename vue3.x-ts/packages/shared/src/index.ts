@@ -1,3 +1,3 @@
-const test = 100;
-const add=0
-export default test
+export function isObject(value) {
+  return typeof value === "object" && value !== null;
+}
