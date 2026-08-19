@@ -1,3 +1,6 @@
+import { activeEffect } from "./effect";
+import { track } from "./reactiveEffect";
+
 export enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive",
   IS_READONLY = "__v_isReadonly",
@@ -17,6 +20,9 @@ export const mutableHandlers: ProxyHandler<any> = {
     if (key === ReactiveFlags.IS_REACTIVE) {
       return true;
     }
+    //取值的时候怎么搜集effect? 使用一个全局变量activeEffect
+    // console.log(activeEffect,key)
+    track(target,key)
     // return target[key];// 不能直接返回 target[key]
     return Reflect.get(target,key,recevier) //proxy 需要搭配reflect来使用
     //当取值的时候 应该让响应式属性和effect 映射起来
