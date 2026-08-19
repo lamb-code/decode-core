@@ -1,9 +1,14 @@
+import Dep from "./observe/dep";
 import { observe } from "./observe/index";
+import Watcher from "./observe/watcher";
 
 export function initState(vm) {
   const opts = vm.$options; //这就是为什么initMixin vm.$options = options; 方便取用户数据
   if (opts.data) {
     initData(vm);
+  }
+  if (opts.computed) {
+    initComputed(vm);
   }
 }
 function proxy(vm, key, target) {
@@ -31,4 +36,40 @@ function initData(vm) {
     // 用户传的options里data，使用vue 一般都是vm.name但是没有这个属性 因此通过代理 // vm._data 用vm代理
     proxy(vm, key, "_data");
   }
+}
+function initComputed(vm) {
+  const computed = vm.$options.computed;
+
+  let watchers = (vm._computedWatchers = {}); //将计算属性watcher保存到实例上
+  for (let key in computed) {
+    let userDef = computed[key];
+    const fn = typeof userDef === "function" ? userDef : userDef.get;
+    //计算属性其实也是一个watcher只是不会立即执行，用lazy变量控制
+    watchers[key] = new Watcher(vm, fn, { lazy: true });
+
+    defineComputed(vm, key, userDef);
+  }
+}
+function defineComputed(target, key, userDef) {
+  const getter = typeof userDef === "function" ? userDef : userDef.get;
+  const setter = userDef.set || (() => {});
+  Object.defineProperty(target, key, {
+    get: createComputedGetter(key),
+    set: setter,
+  });
+}
+function createComputedGetter(key) {
+  //把getter包装下，检测是否要执行getter
+  return function () {
+    const watcher = this._computedWatchers[key];
+    if (watcher.dirty) {
+      //如果是脏的就去执行用户传入的函数
+      watcher.evaluate();
+    }
+    if(Dep.target){
+      //如果计算属性watcher出栈了，如果还存在渲染watcher，需要让计算属性依赖的值记住这个渲染watcher
+      watcher.depend()
+    }
+    return watcher.value;
+  };
 }

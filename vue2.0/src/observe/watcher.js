@@ -1,4 +1,4 @@
-import Dep from "./dep";
+import Dep, { popTarget, pushTarget } from "./dep";
 //当我们创建渲染watcher的时候我们会把当前渲染watcher放到Dep.target上
 let id = 0;
 //不同的组件有不同的watcher
@@ -12,7 +12,10 @@ class Watcher {
     this.getter = fn; // getter 意味着调用这个函数可以发生取值操作
     this.deps = [];
     this.depsId = new Set();
-    this.get();
+    this.lazy = options.lazy; //是用来控制计算属性watcher
+    this.dirty = this.lazy; //dirty也是用来控制计算属性watcher
+    this.vm=vm
+    this.lazy?undefined:this.get();
   }
   addDep(dep) {
     let id = dep.id;
@@ -22,14 +25,36 @@ class Watcher {
       dep.addSub(this);
     }
   }
+  //专为计算属性watcher使用,获取到用户的函数的返回值，并且还要标记为脏
+  evaluate() {
+    this.value = this.get();
+    console.log(this.value,'kdlsjfl')
+    this.dirty=false
+  }
   get() {
-    Dep.target = this; //静态属性只有一份
-    this.getter();
-    Dep.target = null;
+    // Dep.target = this; //静态属性只有一份
+    pushTarget(this);
+    // let value = this.getter();
+    let value = this.getter.call(this.vm); //这里需要call下不然计算属性函数里this会丢失
+
+    // Dep.target = null;
+    popTarget();
+    return value
+  }
+  depend(){
+    let i = this.deps.length
+    while(i--){
+      this.deps[i].depend()
+    }
   }
   update() {
-    queueWatcher(this); //把当前的watcher暂存起来
-    // this.get();
+    if(this.lazy){
+      this.dirty=true //计算属性依赖的值发生变化了 就标识计算属性是脏的
+    }else{
+      queueWatcher(this); //把当前的watcher暂存起来
+      // this.get();
+    }
+
   }
   run() {
     this.get();
@@ -53,9 +78,9 @@ function queueWatcher(watcher) {
     console.log(queue);
     //不管update执行多少次，但是最终只执行一次更新操作 即防抖
     if (!pending) {
-        // setTimeout(flushSchedulerQueue, 0);
-        
-      nextTick(flushSchedulerQueue,0);
+      // setTimeout(flushSchedulerQueue, 0);
+
+      nextTick(flushSchedulerQueue, 0);
       pending = true;
     }
   }
@@ -63,7 +88,7 @@ function queueWatcher(watcher) {
 let callbacks = [];
 let waiting = false;
 function flushCallbacks() {
-  const cbs = callbacks.slice(0)
+  const cbs = callbacks.slice(0);
   callbacks = [];
   waiting = false;
   cbs.forEach((cb) => cb());
@@ -72,7 +97,6 @@ export function nextTick(cb) {
   callbacks.push(cb);
   if (!waiting) {
     setTimeout(() => {
-        
       flushCallbacks();
     }, 0);
     waiting = true;

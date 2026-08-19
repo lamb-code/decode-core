@@ -1,4 +1,3 @@
-
 let id = 0;
 //dep 需要搜集watcher
 class Dep {
@@ -14,10 +13,20 @@ class Dep {
   addSub(watcher) {
     this.subs.push(watcher);
   }
-  notify(){
-    this.subs.forEach(watcher=>{
-        watcher.update()
-    })
+  notify() {
+    this.subs.forEach((watcher) => {
+      watcher.update();
+    });
   }
+}
+Dep.target = null;
+let stact = [];
+export function pushTarget(watcher) {
+  stact.push(watcher);
+  Dep.target = watcher;
+}
+export function popTarget(watcher) {
+  stact.pop();
+  Dep.target = stact[stact.length - 1];
 }
 export default Dep;
