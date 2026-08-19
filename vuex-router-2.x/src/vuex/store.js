@@ -37,7 +37,26 @@ function installModule(store, rootState, path, module) {
     installModule(store, rootState, path.concat(key), child);
   });
 }
-
+function resetStoreVm(store, state) {
+  const wrapperGetters = store._wrapperGetters;
+  const computed = {};
+  store.getters = {};
+  forEachValue(wrapperGetters, (fn, key) => {
+    computed[key] = function () {
+      return fn();
+    };
+    Object.defineProperty(store.getters, key, {
+      get: () => store._vm[key],
+    });
+  });
+  store._vm = new Vue({
+    data: {
+      $$state: state, //vue中定义数据，属性名是有特点的  如果属性名是$xxx命名的 他不会被代理vue的实例上 所以用了两个$$
+    },
+    computed
+  });
+  console.log(store._vm, '_vm')
+}
 //用户最终拿到是这个类的实例
 class Store {
   constructor(options) {
@@ -95,18 +114,17 @@ class Store {
     this._wrapperGetters = {}; //存放所有模块的getters
 
     installModule(this, state, [], this._modules.root);
-    console.log(this._modules);
-    console.log(this._mutations);
-    console.log(this._actions);
-    console.log(this._wrapperGetters);
-    console.log(state);
+    //将状态放到vue的实例中去
+    resetStoreVm(this, state);
   }
   commit = (type, payload) => {
     //这需要考虑this问题，为了方便用箭头函数，为什么会有this问题，因为aciton参数可以解构{commit,store}
-    this._mutations[type](payload);
+    // this._mutations[type](payload);
+    this._mutations[type].forEach((fn) => fn(payload));
   };
   dispatch(type, payload) {
-    this._acitons[type](payload);
+    // this._acitons[type](payload);
+    this._acitons[type].forEach((fn) => fn(payload));
   }
   // 用户怎么拿数据？ 通过类属性访问器，当用户去这个实例上取states属性时会执行此方法
   get state() {
