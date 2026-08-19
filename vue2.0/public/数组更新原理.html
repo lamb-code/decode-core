@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app">
+    {{arr}}
+  </div>
+  <script src="../dist/umd/vue.js"></script>
+  <script>
+    const vm = new Vue({
+      data: {
+        arr: [1, 2, 3]
+      },
+      el: "#app", //我们需要将数据解析到el元素上
+    });
+    // vm.arr[0] = 100 //这种方式能否监控到？ 不能，只重写了数组方法
+    // vm.arr.length = 100//这种能监控吗？ 不会，没有监控长度变化
+    vm.arr.push(99) //调数组方法 可以通知更新
+  </script>
+</body>
+
+</html>

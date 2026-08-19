@@ -3,6 +3,8 @@ import Dep from "./dep";
 
 class Observer {
   constructor(data) {
+    //给每个对象都增加收集功能，为什么需要给数组和每个对象增加dep?给对象增加dep 为实现$set方法给对象增加新属性也需要更新，给数组加就是为操作数组方法时监控数组通知更新
+    this.dep =new Dep()
     // data.__ob__ = this // 给对象和数组添加一个自定义属性,为了重写array数组方法拿到observeArray方法且加了个标识区分数据是否被劫持过，但是直接这样会造成死循环，需要不能枚举属性
     Object.defineProperty(data, "__ob__", {
       value: this,
@@ -31,6 +33,15 @@ class Observer {
     });
   }
 }
+function dependArray(value){
+  for(let i=0;i<value.length;i++){
+    let current = value[i]
+    current.__ob__&&current.__ob__.dep.depend()
+    if(Array.isArray(current)){
+      dependArray(current)
+    }
+  }
+}
 export function defineReactive(target, key, value) {
   let childOb = observe(value); // 递归进行观测数据. 不管有多少层,我都进行defineProperty
   let dep = new Dep(); //给每个属性增加个一个dep
@@ -41,6 +52,12 @@ export function defineReactive(target, key, value) {
       // console.log("取值02");
       if(Dep.target){
         dep.depend()
+        if(childOb){
+          childOb.dep.depend()//让数组和对象本身也实现依赖收集
+          if(Array.isArray(value)){
+            dependArray(value)
+          }
+        }
       }
 
       return value;

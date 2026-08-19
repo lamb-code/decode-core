@@ -27,7 +27,7 @@ methods.forEach((method) => {
       //怎么拿到observeArray呢？唯一能拿到是this
       ob.observeArray(inserted);
     }
-    // ob.dep.notify(); // 触发页面更新流程
+    ob.dep.notify(); // 触发页面更新流程
     return result;
   };
 });
