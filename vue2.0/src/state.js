@@ -10,6 +10,9 @@ export function initState(vm) {
   if (opts.computed) {
     initComputed(vm);
   }
+  if (opts.watch) {
+    initWatch(vm);
+  }
 }
 function proxy(vm, key, target) {
   // 取值的时候做代理, 不是暴力的把_data 属性赋值给vm, 而且直接赋值会有命名冲突问题
@@ -66,10 +69,29 @@ function createComputedGetter(key) {
       //如果是脏的就去执行用户传入的函数
       watcher.evaluate();
     }
-    if(Dep.target){
+    if (Dep.target) {
       //如果计算属性watcher出栈了，如果还存在渲染watcher，需要让计算属性依赖的值记住这个渲染watcher
-      watcher.depend()
+      watcher.depend();
     }
     return watcher.value;
   };
+}
+function initWatch(vm) {
+  let watch = vm.$options.watch;
+  for (let key in watch) {
+    const handler = watch[key]; // 值有字符串 数组 函数 对象 多种情况 这也就是watch多种写法的原因
+    if (Array.isArray(handler)) {
+      for (let i = 0; i < handler.length; i++) {
+        createWatcher(vm, key, handler[i]);
+      }
+    } else {
+      createWatcher(vm, key, handler[i]);
+    }
+  }
+}
+function createWatcher(vm, key, handler) {
+  if (typeof handler === "string") {
+    handler = vm[handler];
+  }
+  return vm.$watch(key,handler)
 }

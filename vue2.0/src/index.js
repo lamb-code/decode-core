@@ -11,4 +11,8 @@ initMixin(Vue); // 将 _init 方法添加到 Vue 实例原型上，供 Vue 实�
 lifecycleMixin(Vue);
 initGlobalApi(Vue)
 
+Vue.prototype.$watch=function(exprOrFn,cb,options={}){
+
+}
+
 export default Vue;
