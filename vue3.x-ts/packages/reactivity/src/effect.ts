@@ -9,6 +9,9 @@ export function effect(fn, options) {
 }
 export let activeEffect;
 class ReactiveEffect {
+  _trackId = 0;
+  deps = [];
+  _depsLength = 0;
   public active = true; //标记是否是响应式 默认是
   constructor(public fn, public scheduler) {}
   run() {
@@ -28,6 +31,18 @@ class ReactiveEffect {
     }
   }
 }
+export function trackEffect(effect, dep) {
+  dep.set(effect, effect._trackId);
+  effect.deps[effect._depsLength++] = dep;
+}
+export function triggerEffects(dep) {
+  for (let effect of dep.keys()) {
+    if (effect.scheduler) {
+      effect.scheduler();
+    }
+  }
+}
+
 /*
     try {
       //为什么需要try,fn执行完之后 activeEffect没有意义了
