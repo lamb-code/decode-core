@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+  <title>
+    <%= htmlWebpackPlugin.options.title %>
+  </title>
+  <style>
+    .father {
+      /* width: 600px;
+      background-color: thistle;
+      border: 3px solid saddlebrown; */
+
+      /* 触发 BFC */
+      /* overflow: hidden; */
+      /* position: absolute; */
+      /* display: inline-block; */
+      /* display: table; */
+      /* display: flex; */
+
+      /* css3触发 BFC 专用, 没有副作用 */
+      /* display: flow-root;  */
+
+    }
+
+    /* .son {
+      width: 400px;
+      height: 200px;
+      background-color: seagreen;
+      float: left;
+    } */
+
+    .father {
+      width: 600px;
+      height: 300px;
+      background-color: thistle;
+
+      /* 设置border也可以阻止父子元素margin合并 */
+      /* border: 3px solid sandybrown; */
+
+      /* 触发 BFC */
+      /* overflow: hidden; */
+      /* position: absolute; */
+      /* display: inline-block; */
+      /* display: table; */
+      /* display: flex; */
+      /* float: left; */
+
+      /* css3触发 BFC 专用, 没有副作用 */
+      /* display: flow-root; */
+
+    }
+
+    .son {
+      width: 400px;
+      height: 200px;
+      background-color: seagreen;
+      margin-top: 100px;
+    }
+    .left,
+.right {
+  width: 200px;
+  height: 100px;
+  background-color: sandybrown;
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.center {
+  height: 200px;
+  background-color: seagreen;
+  /* 触发 BFC，  */
+  display: flow-root;
+}
+  </style>
+</head>
+
+<body>
+  <noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+        Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+  <div class="father">
+    <div class="son"></div>
+  </div>
+  <div class="box">
+    <div class="left"></div>
+    <div class="right"></div>
+    <!-- 中间区域位置 -->
+    <div class="center"></div>
+ </div>
+  <!-- built files will be auto injected -->
+</body>
+
+</html>
