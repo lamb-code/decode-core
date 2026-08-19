@@ -5,21 +5,22 @@ import Vuex from 'vuex'
 Vue.use(Vuex)
 //内部会创建一个vue实例，通信用的
 const store = new Vuex.Store({
-  state: {
+  state: { //组件的状态 等价于 new Vue(data)
     a: 20,
     age: 18
   },
-  getters: {
-    myAge(state) {
+  getters: { //获取计算属性 等价于 new Vue(computed) 当依赖的值变化会重新执行
+
+    myAge(state) {//如果返回的值相同 不会重新执行这个函数
       return state.a + 5
     }
   },
-  mutations: {
+  mutations: { //vue中的方法 唯一可以改状态的方法，同步的方法
     changeAge(sate, payload) {
       sate.age += payload
     }
   },
-  actions: {
+  actions: { //通过action发起请求
     changeAge({ commit }, payload) {
       setTimeout(() => {
         commit('changeAge', payload)
