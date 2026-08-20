@@ -37,7 +37,9 @@ export default class History {
         this.current = route
         this.cb && this.cb(route)
     }
+    //主要用在init 方法中 更新_router属性 这个属性具响应式
     listen(cb) {
+      //这个cb 是init 方法history.listen的函数参数 主要功能 是把最新的route赋值到_router属性上
         this.cb = cb
     }
 }
