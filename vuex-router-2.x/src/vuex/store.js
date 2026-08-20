@@ -6,6 +6,12 @@ import { forEachValue } from "./util";
 let Vue;
 
 function installModule(store, rootState, path, module) {
+  //注册事件时 需要注册到对应的命名空间中 path就是所有的路径 根据path算出一个空间里
+  // console.log(store._modules)
+  //getNamespace 也可以写成全局方法 现在封装到类里面
+  let namespace = store._modules.getNamespace(path);
+  // console.log(namespace);
+
   //如果是子模块 我就需要将子模块的状态定义到根模块上
   if (path.length > 0) {
     let parent = path.slice(0, -1).reduce((memo, current) => {
@@ -16,20 +22,21 @@ function installModule(store, rootState, path, module) {
     Vue.set(parent, path[path.length - 1], module.state);
   }
   module.forEachMutation((mutation, type) => {
-    store._mutations[type] = store._mutations[type] || [];
-    store._mutations[type].push((payload) => {
+    store._mutations[namespace + type] =
+      store._mutations[namespace + type] || [];
+    store._mutations[namespace + type].push((payload) => {
       mutation.call(store, module.state, payload);
     });
   });
   module.forEachAction((action, type) => {
-    store._actions[type] = store._actions[type] || [];
-    store._actions[type].push((payload) => {
+    store._actions[namespace + type] = store._actions[namespace + type] || [];
+    store._actions[namespace + type].push((payload) => {
       action.call(store, store, payload);
     });
   });
   module.forEachGetter((getter, key) => {
     //如果getters重名会覆盖 所有的模块的getters都会定义到根模块上
-    store._wrapperGetters[key] = function (params) {
+    store._wrapperGetters[namespace + key] = function (params) {
       return getter(module.state);
     };
   });
@@ -39,6 +46,7 @@ function installModule(store, rootState, path, module) {
 }
 function resetStoreVm(store, state) {
   const wrapperGetters = store._wrapperGetters;
+  let oldVm = store._vm;
   const computed = {};
   store.getters = {};
   forEachValue(wrapperGetters, (fn, key) => {
@@ -53,9 +61,13 @@ function resetStoreVm(store, state) {
     data: {
       $$state: state, //vue中定义数据，属性名是有特点的  如果属性名是$xxx命名的 他不会被代理vue的实例上 所以用了两个$$
     },
-    computed
+    computed,
   });
-  console.log(store._vm, '_vm')
+  //老的实例直接销毁
+  if (oldVm) {
+    Vue.nextTick(() => oldVm.$destroyed());
+  }
+  console.log(store._vm, "_vm");
 }
 //用户最终拿到是这个类的实例
 class Store {
@@ -129,6 +141,18 @@ class Store {
   // 用户怎么拿数据？ 通过类属性访问器，当用户去这个实例上取states属性时会执行此方法
   get state() {
     return this._vm._data.$$state;
+  }
+  registerModule(path, rawModule) {
+    if (typeof path === "string") path = [path];
+    console.log(rawModule,'rawModule')
+    //实现模块注册
+    this._modules.register(path, rawModule);
+
+    //安装模块
+    installModule(this, this.state, path, rawModule.newModule);
+
+    //考虑getters 是用的vue计算属性 还得放在实例上去重新定义getters,但是问题 又会生成一个vue实例，上一个实例怎么销毁？
+    resetStoreVm(this, this.state);
   }
 }
 const install = (_Vue) => {

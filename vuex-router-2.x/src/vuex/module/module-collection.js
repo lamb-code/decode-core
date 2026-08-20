@@ -15,6 +15,7 @@ export default class ModuleCollection {
     //     state: rootModule.state
     // }
     let newModule = new Module(rootModule);
+    rootModule.newModule = newModule // 把生成Module 又放在rootModule.rawModule属性 相当于一个映射 方便用户手动registerModule注册使用
     if (path.length === 0) {
       this.root = newModule;
     } else {
@@ -34,6 +35,13 @@ export default class ModuleCollection {
         this.register([...path, moduleName], module);
       });
     }
+  }
+  getNamespace(path) {
+    let root = this.root;
+    return path.reduce((namespace, key) => {
+      root = root.getChild(key);
+      return namespace + (root.namespaced ? key + "/" : "");
+    }, "");
   }
 }
 //格式化形态
