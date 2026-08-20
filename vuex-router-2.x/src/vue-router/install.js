@@ -9,7 +9,7 @@ export default function install(Vue) {
       if (this.$options.router) {
         this._routerRoot = this; //这是将当前根实例放到了_routerRoot属性上，为的是让子也拿到这个根实例
         this._router = this.$options.router; //把VueRouter实例定义到vue根实例_router 为的是让子组件通过this._routerRoot._router 可以拿到VueRouter实例
-        // this._router.init(this);
+        this._router.init(this);//初始化路由表
         // Vue.util.defineReactive(this, "_route", this._router.history.current);
       } else {
         this._routerRoot = this.$parent && this.$parent._routerRoot; //一直往上找 获取到根实例
