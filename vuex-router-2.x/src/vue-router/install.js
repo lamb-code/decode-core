@@ -20,12 +20,12 @@ export default function install(Vue) {
   //代理$route $router属性 让每个组件都有这两个属性
   Object.defineProperty(Vue.prototype, "$route", {
     get() {
-      return this._routerRoot._route;
+      return this._routerRoot&&this._routerRoot._route;
     },
   });
   Object.defineProperty(Vue.prototype, "$router", {
     get() {
-      return this._routerRoot._router;
+      return this._routerRoot&&this._routerRoot._router;
     },
   });
   //注册全局属性 $route $router
