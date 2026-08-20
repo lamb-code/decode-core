@@ -4,7 +4,12 @@ import ModuleCollection from "./module/module-collection";
 import { forEachValue } from "./util";
 
 let Vue;
-
+//获取最新的状态
+function getState(store,path){
+  return path.reduce((newState,current)=>{
+    return newState[current]
+  },store.state)
+}
 function installModule(store, rootState, path, module) {
   //注册事件时 需要注册到对应的命名空间中 path就是所有的路径 根据path算出一个空间里
   // console.log(store._modules)
@@ -25,7 +30,10 @@ function installModule(store, rootState, path, module) {
     store._mutations[namespace + type] =
       store._mutations[namespace + type] || [];
     store._mutations[namespace + type].push((payload) => {
-      mutation.call(store, module.state, payload);
+      // mutation.call(store, module.state, payload);//内部可能会替换状态，如果一直使用module.state 可能是老的状态
+      mutation.call(store, getState(store,path), payload)
+      //调用订阅的事件
+      store._subscribers.forEach(sub=>sub({mutation,type},store.state))
     });
   });
   module.forEachAction((action, type) => {
@@ -37,7 +45,7 @@ function installModule(store, rootState, path, module) {
   module.forEachGetter((getter, key) => {
     //如果getters重名会覆盖 所有的模块的getters都会定义到根模块上
     store._wrapperGetters[namespace + key] = function (params) {
-      return getter(module.state);
+      return getter(getState(store,path));
     };
   });
   module.forEachChild((child, key) => {
@@ -124,10 +132,13 @@ class Store {
     this._mutations = {}; //存放所有模块的mutation
     this._actions = {}; //存放所有模块的action
     this._wrapperGetters = {}; //存放所有模块的getters
-
+    this._subscribers=[] //存放插件
     installModule(this, state, [], this._modules.root);
     //将状态放到vue的实例中去
     resetStoreVm(this, state);
+  }
+  subscribe(fn){
+    this._subscribers.push(fn)
   }
   commit = (type, payload) => {
     //这需要考虑this问题，为了方便用箭头函数，为什么会有this问题，因为aciton参数可以解构{commit,store}
@@ -137,6 +148,9 @@ class Store {
   dispatch(type, payload) {
     // this._acitons[type](payload);
     this._actions[type].forEach((fn) => fn(payload));
+  }
+  replaceState(newState){
+    this._vm._data.$$state=newState
   }
   // 用户怎么拿数据？ 通过类属性访问器，当用户去这个实例上取states属性时会执行此方法
   get state() {
@@ -153,6 +167,10 @@ class Store {
 
     //考虑getters 是用的vue计算属性 还得放在实例上去重新定义getters,但是问题 又会生成一个vue实例，上一个实例怎么销毁？
     resetStoreVm(this, this.state);
+    //执行插件
+    if(options.plugins){
+      options.plugins.forEach((plugin=>plugin(this)))
+    }
   }
 }
 const install = (_Vue) => {
