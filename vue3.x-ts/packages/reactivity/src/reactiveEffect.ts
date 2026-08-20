@@ -1,4 +1,4 @@
-import { activeEffect, triggerEffects } from "./effect";
+import { activeEffect, trackEffect, triggerEffects } from "./effect";
 const targetMap = new WeakMap(); //存放搜集依赖的关系
 export const createDep = (cleanup, key) => {
   const dep = new Map() as any;
@@ -18,7 +18,8 @@ export function track(target, key) {
       //   depsMap.set(key, new Map());
       depsMap.set(key, (dep = createDep(() => depsMap.delete(key), key)));
     }
-    console.log(targetMap);
+    trackEffect(activeEffect, dep);
+    // console.log(targetMap);
   }
 }
 export function trigger(target, key, newValue, oldValue) {

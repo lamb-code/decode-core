@@ -30,16 +30,32 @@
 
     } from "../dist/reactivity.js";
 
-    const obj = { name: "jane", age: 30 };
-    const state1 = reactive(obj);
+    const obj = { name: "jane", age: 30, flag: true };
+    const state = reactive(obj);
+    // const _effect = effect(() => {
+    //   console.log(state.name)
+    //   effect(() => {
+    //     console.log(state.name)
+    //   })
+    //  console.log(state.age)
+    // });
+    // state.age ++
+    // const _effect = effect(() => {
+    //   console.log('runner....')
+    //   app.innerHTML = state.flag ? state.name : state.age
+    // })
     const _effect = effect(() => {
-      console.log(state1.name)
-      effect(() => {
-        console.log(state1.name)
-      })
-     console.log(state1.age)
-    });
-    state1.age ++
+      console.log('runner....')
+      app.innerHTML = state.flag + state.flag+ state.flag
+    })
+    setTimeout(() => {
+      state.flag = false;
+      // setTimeout(() => {
+      //   //此案例：修改name属性后 不应该触发effect重新执行所以需要清理依赖
+      //   state.name = 'test'
+      // }, 1000)
+    }, 1000)
+
   </script>
 </body>
 

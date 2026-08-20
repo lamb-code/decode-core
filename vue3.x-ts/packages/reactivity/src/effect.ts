@@ -8,12 +8,24 @@ export function effect(fn, options) {
   return _effect;
 }
 export let activeEffect;
+function preCleanEffect(effect) {
+  effect._depsLength = 0;
+  effect._trackId++; //每次执行id都是+1 如果当前同一个effect执行id就是相同的
+}
+function postCleanEffect(effect){
+  if(effect.deps.length>effect._depsLength){
+    for(let i = effect._depsLength;i<effect.deps.length;i++){
+      cleanDepEffect(effect.deps[i],effect)
+    }
+    effect.deps.length=effect._depsLength
+  }
+}
 class ReactiveEffect {
   _trackId = 0;
   deps = [];
   _depsLength = 0;
   public active = true; //标记是否是响应式 默认是
-  constructor(public fn, public scheduler) {}
+  constructor(public fn, public scheduler) {} //fn就是effect函数的参数函数
   run() {
     if (!this.active) {
       return this.fn(); //不是激活的 执行后 什么都不用做
@@ -23,17 +35,46 @@ class ReactiveEffect {
 
     let lastEffect = activeEffect;
     try {
+      //effect重新执行前需要将上一次的依赖清理,为什么需要清理？
+      preCleanEffect(this);
+
       //为什么需要try,fn执行完之后 activeEffect没有意义了
       activeEffect = this;
       return this.fn();
     } finally {
       activeEffect = lastEffect;
+      postCleanEffect(this)
     }
   }
 }
+function cleanDepEffect(dep, effect) {
+  dep.delete(effect);
+  if (dep.size == 0) {
+    dep.cleanup();
+  }
+}
 export function trackEffect(effect, dep) {
-  dep.set(effect, effect._trackId);
-  effect.deps[effect._depsLength++] = dep;
+  // dep.set(effect, effect._trackId);
+  // //让effect和dep关联起来
+  // effect.deps[effect._depsLength++] = dep;
+
+  //effect清零，需要重新搜集依赖 将不需要的移除掉
+  // console.log(effect, dep);
+  // console.log(dep.get(effect),effect._trackId);
+  // 需要理解执行逻辑，_trackId 表示执行轮次
+  if (dep.get(effect) != effect._trackId) {
+    dep.set(effect, effect._trackId); //更新id
+    let oldDep = effect.deps[effect._depsLength];
+    if (oldDep != dep) {
+      if (oldDep) {
+        //如果有老的，先删除老的
+        cleanDepEffect(oldDep, effect);
+      }
+      effect.deps[effect._depsLength++] = dep;
+    } else {
+      effect._depsLength++;
+    }
+  }
 }
 export function triggerEffects(dep) {
   for (let effect of dep.keys()) {
