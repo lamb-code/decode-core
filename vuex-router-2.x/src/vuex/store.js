@@ -136,7 +136,7 @@ class Store {
   };
   dispatch(type, payload) {
     // this._acitons[type](payload);
-    this._acitons[type].forEach((fn) => fn(payload));
+    this._actions[type].forEach((fn) => fn(payload));
   }
   // 用户怎么拿数据？ 通过类属性访问器，当用户去这个实例上取states属性时会执行此方法
   get state() {

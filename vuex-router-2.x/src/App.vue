@@ -4,13 +4,13 @@
       <!-- <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link> -->
     </nav>
-    <!-- <div>age:{{ $store.state.age }}</div>
-    <div>a:{{ $store.state.a }}</div>
+    <div>age:{{ $store.state.age }}</div>
+    <div>num:{{ $store.state.num }}</div>
     <div>myAge:{{ $store.getters.myAge }}</div>
     <button @click="$store.commit('changeAge', 8)">更新状态</button>
     <button @click="$store.dispatch('changeAge', 6)">异步更新状态</button>
-    <button @click="$store.state.a += 10">增加10</button>
-    <br /> -->
+    <button @click="$store.state.num += 10">增加10</button>
+    <br />
     <!-- {{
       $store.state.a.c
     }} -->

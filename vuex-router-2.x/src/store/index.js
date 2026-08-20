@@ -7,7 +7,7 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
   state: {
     //组件的状态 等价于 new Vue(data)
-    a: 20,
+    num: 20,
     age: 18,
   },
   getters: {
