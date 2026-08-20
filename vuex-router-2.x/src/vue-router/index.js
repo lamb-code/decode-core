@@ -18,6 +18,7 @@ export default class VueRouter {
         break;
     }
     // this.history = new HashHistory(this);
+    this.beforeHooks=[]
   }
   init(app) {
     //newVue app指代的是根实例
@@ -40,6 +41,9 @@ export default class VueRouter {
   push(location) {
     const history = this.history
     window.location.hash=location
+  }
+  beforeEach(fn){
+    this.beforeHooks.push(fn)
   }
 }
 VueRouter.install = install;
