@@ -1,24 +1,25 @@
 /* eslint-disable*/
 import Vue from "vue";
-// import Vuex from "../vuex/index";
-import Vuex from 'vuex'
+import Vuex from "../vuex/index";
+// import Vuex from "vuex";
 //插件开发 一般都是函数 vuex 插件开发涉及到replaceState subscribe两个api  plugins属性
-function persists(store){
-  const key ='vuex:state'
-  const local = localStorage.getItem(key)
-  console.log('插件执行')
-  if(local){
-    store.replaceState(JSON.parse(local))
+function persists(store) {
+  const key = "vuex:state";
+  const local = localStorage.getItem(key);
+  console.log("插件执行");
+  if (local) {
+    store.replaceState(JSON.parse(local));
   }
-  store.subscribe((mutation,state)=>{
-    console.log('subscribe执行')
-    localStorage.setItem(key,JSON.stringify(state))
-  })
+  store.subscribe((mutation, state) => {
+    console.log("subscribe执行");
+    localStorage.setItem(key, JSON.stringify(state));
+  });
 }
 Vue.use(Vuex);
 //内部会创建一个vue实例，通信用的
 const store = new Vuex.Store({
-  plugins:[persists],
+  strict: true, //严格模式，严格模式下只能通过mutation来更改状态其他都不可以
+  plugins: [persists],
   state: {
     //组件的状态 等价于 new Vue(data)
     num: 20,
@@ -35,6 +36,10 @@ const store = new Vuex.Store({
   mutations: {
     //vue中的方法 唯一可以改状态的方法，同步的方法
     changeAge(sate, payload) {
+      //严格模式 mutation 里写异步逻辑会报错
+      // setTimeout(()=>{
+      //   sate.age += payload;
+      // },1000)
       sate.age += payload;
     },
   },

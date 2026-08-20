@@ -5,10 +5,10 @@ import { forEachValue } from "./util";
 
 let Vue;
 //获取最新的状态
-function getState(store,path){
-  return path.reduce((newState,current)=>{
-    return newState[current]
-  },store.state)
+function getState(store, path) {
+  return path.reduce((newState, current) => {
+    return newState[current];
+  }, store.state);
 }
 function installModule(store, rootState, path, module) {
   //注册事件时 需要注册到对应的命名空间中 path就是所有的路径 根据path算出一个空间里
@@ -24,16 +24,24 @@ function installModule(store, rootState, path, module) {
     }, rootState);
     //这个Vue.set api 可以新增属性 如果本身对象不丝滑响应式会直接复制，他会区分是否是响应式数据
     // Vue.set(rootState,path[path.length - 1],module.state)// 这样会把所有模块状态定义到根模块
-    Vue.set(parent, path[path.length - 1], module.state);
+    // Vue.set(parent, path[path.length - 1], module.state);//严格模式会出现错误
+    store._withCommitting(() => {
+      Vue.set(parent, path[path.length - 1], module.state);
+    });
   }
   module.forEachMutation((mutation, type) => {
     store._mutations[namespace + type] =
       store._mutations[namespace + type] || [];
     store._mutations[namespace + type].push((payload) => {
       // mutation.call(store, module.state, payload);//内部可能会替换状态，如果一直使用module.state 可能是老的状态
-      mutation.call(store, getState(store,path), payload)
+      // mutation.call(store, getState(store, path), payload);
+
+      // 用_withCommitting 包装解决严格模式
+      store._withCommitting(() => {
+        mutation.call(store, getState(store, path), payload);
+      });
       //调用订阅的事件
-      store._subscribers.forEach(sub=>sub({mutation,type},store.state))
+      store._subscribers.forEach((sub) => sub({ mutation, type }, store.state));
     });
   });
   module.forEachAction((action, type) => {
@@ -45,7 +53,7 @@ function installModule(store, rootState, path, module) {
   module.forEachGetter((getter, key) => {
     //如果getters重名会覆盖 所有的模块的getters都会定义到根模块上
     store._wrapperGetters[namespace + key] = function (params) {
-      return getter(getState(store,path));
+      return getter(getState(store, path));
     };
   });
   module.forEachChild((child, key) => {
@@ -71,6 +79,16 @@ function resetStoreVm(store, state) {
     },
     computed,
   });
+  if (store.strict) {
+    //严格模式下 就为vm watch整个state,只要有变化就立即执行
+    store._vm.$watch(
+      () => store._vm._data.$$state,
+      () => {
+        console.assert(store._committing, "mutation之外更改状态了");
+      },
+      { deep: true, sync: true }
+    );
+  }
   //老的实例直接销毁
   if (oldVm) {
     Vue.nextTick(() => oldVm.$destroyed());
@@ -132,13 +150,22 @@ class Store {
     this._mutations = {}; //存放所有模块的mutation
     this._actions = {}; //存放所有模块的action
     this._wrapperGetters = {}; //存放所有模块的getters
-    this._subscribers=[] //存放插件
+    this._subscribers = []; //存放插件
+    this.strict = options.strict; //是否严格模式
+    this._committing = false; //同步的watcher
     installModule(this, state, [], this._modules.root);
     //将状态放到vue的实例中去
     resetStoreVm(this, state);
   }
-  subscribe(fn){
-    this._subscribers.push(fn)
+  // 这方法主要用于严格模式下
+  _withCommitting(fn) {
+    let _committing = this._committing;
+    this._committing = true; //函数调用前 标识 -committing 为true
+    fn();
+    this._committing = _committing;
+  }
+  subscribe(fn) {
+    this._subscribers.push(fn);
   }
   commit = (type, payload) => {
     //这需要考虑this问题，为了方便用箭头函数，为什么会有this问题，因为aciton参数可以解构{commit,store}
@@ -149,8 +176,11 @@ class Store {
     // this._acitons[type](payload);
     this._actions[type].forEach((fn) => fn(payload));
   }
-  replaceState(newState){
-    this._vm._data.$$state=newState
+  replaceState(newState) {
+    // this._vm._data.$$state = newState;//严格模式会报错
+    this._withCommitting(() => {
+      this._vm._data.$$state = newState;
+    });
   }
   // 用户怎么拿数据？ 通过类属性访问器，当用户去这个实例上取states属性时会执行此方法
   get state() {
@@ -158,7 +188,7 @@ class Store {
   }
   registerModule(path, rawModule) {
     if (typeof path === "string") path = [path];
-    console.log(rawModule,'rawModule')
+    console.log(rawModule, "rawModule");
     //实现模块注册
     this._modules.register(path, rawModule);
 
@@ -168,8 +198,8 @@ class Store {
     //考虑getters 是用的vue计算属性 还得放在实例上去重新定义getters,但是问题 又会生成一个vue实例，上一个实例怎么销毁？
     resetStoreVm(this, this.state);
     //执行插件
-    if(options.plugins){
-      options.plugins.forEach((plugin=>plugin(this)))
+    if (options.plugins) {
+      options.plugins.forEach((plugin) => plugin(this));
     }
   }
 }

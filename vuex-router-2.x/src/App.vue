@@ -9,7 +9,7 @@
     <div>myAge:{{ $store.getters.myAge }}</div>
     <button @click="$store.commit('changeAge', 8)">更新状态</button>
     <button @click="$store.dispatch('changeAge', 6)">异步更新状态</button>
-    <button @click="$store.state.num += 10">增加10</button>
+    <button @click="$store.state.num += 10">严格模式增加10</button>
     <br />
     <!-- {{
       $store.state.a.c
