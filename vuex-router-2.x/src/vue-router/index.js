@@ -37,6 +37,9 @@ export default class VueRouter {
   match(location) {
     return this.matcher.match(location);
   }
-  push() {}
+  push(location) {
+    const history = this.history
+    window.location.hash=location
+  }
 }
 VueRouter.install = install;
