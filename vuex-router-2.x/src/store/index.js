@@ -18,7 +18,7 @@ function persists(store) {
 Vue.use(Vuex);
 //内部会创建一个vue实例，通信用的
 const store = new Vuex.Store({
-  strict: true, //严格模式，严格模式下只能通过mutation来更改状态其他都不可以
+  strict: false, //严格模式，严格模式下只能通过mutation来更改状态其他都不可以
   plugins: [persists],
   state: {
     //组件的状态 等价于 new Vue(data)
