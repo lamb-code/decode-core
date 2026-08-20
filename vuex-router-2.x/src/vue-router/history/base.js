@@ -4,7 +4,7 @@ export function createRoute(record, location) {
     if (record) {
         while (record) {
             res.unshift(record)
-            record = record.parent
+            record = record.parent //parent 属性是之前addRouteRecord 就增加了
         }
     }
     return {
@@ -15,6 +15,8 @@ export function createRoute(record, location) {
 export default class History {
     constructor(router) {
         this.router = router
+        //current 存放的是当前匹配的记录
+        //匹配记录逻辑应该是; 比如匹配'/' 那肯定是匹配到{path:"/",component:Home},'/about/a'的话应该存放两条记录 一个是'/about'对应的记录  一个是'/about/a'对应的记录,依次类推
         this.current = createRoute(null, {
             path: '/'
         })
@@ -23,7 +25,9 @@ export default class History {
     transitionTo(location, onComplete) {
         console.log(location, 'localtion')
         // route 形态 /about/a =>{path:'/about/a',matched:[About,AboutA]}
+        // let route = this.router.matcher.match(location) //用当前路径找出对应的记录
         let route = this.router.match(location) //用当前路径找出对应的记录
+
         if (this.current.path === location && route.matched.length === this.current.matched.length) return
         this.updateRoute(route)
         console.log(route, 'kkkkk')
