@@ -1,7 +1,7 @@
 import { isObject } from "@vue/shared";
 import { activeEffect } from "./effect";
 import { track, trigger } from "./reactiveEffect";
-import { reactive } from "vue";
+import {reactive} from './reactive'
 
 export enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive",

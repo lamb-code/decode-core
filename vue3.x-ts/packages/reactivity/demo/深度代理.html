@@ -10,13 +10,13 @@
     <div id="app"></div>
     <script type="module">
       // 原生的
-      import {
-        reactive,
-        effect,
-      } from "/node_modules/vue/dist/vue.esm-browser.js";
+      // import {
+      //   reactive,
+      //   effect,
+      // } from "/node_modules/vue/dist/vue.esm-browser.js";
 
       // 自己的
-      // import { reactive, effect } from "../dist/reactivity.js";
+      import { reactive, effect } from "../dist/reactivity.js";
 
       const obj = { name: "jane", age: 30, flag: true,address:{n:1} };
       const state = reactive(obj);

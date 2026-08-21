@@ -86,7 +86,7 @@ export function trackEffect(effect, dep) {
 }
 export function triggerEffects(dep) {
   for (let effect of dep.keys()) {
-    if (!this._running) {
+    if (!effect._running) {
       //如果不是正在执行，才只执行 防止递归调用
       if (effect.scheduler) {
         effect.scheduler();
