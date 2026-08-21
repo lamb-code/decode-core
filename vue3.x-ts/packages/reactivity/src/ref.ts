@@ -36,8 +36,45 @@ function trackRefValue(ref) {
   }
 }
 function triggerRefValue(ref) {
-    let dep = ref.dep
-    if(dep){
-        triggerEffects(dep)
-    }
+  let dep = ref.dep;
+  if (dep) {
+    triggerEffects(dep);
+  }
+}
+class ObjectRefImpl {
+  constructor(public _object, public _key) {}
+  get value() {
+    return this._object[this._key];
+  }
+  set value(newValue) {
+    this._object[this._key] = newValue;
+  }
+}
+export function toRef(object, key) {
+  return new ObjectRefImpl(object, key);
+}
+export function toRefs(object) {
+  const res = {};
+
+  for (let key in object) {
+    res[key] = toRef(object, key);
+  }
+  return res;
+}
+export function proxyRefs(objectWithRef) {
+  return new Proxy(objectWithRef, {
+    get(target, key, recevier) {
+      let r = Reflect.get(target, key, recevier);
+      return r.__v_isRef ? r.value : r;
+    },
+    set(target, key, value, recevier) {
+      const oldValue = target[key];
+      if (oldValue.__v_isRef) {
+        oldValue.value = value;
+        return true
+      } else {
+        return Reflect.set(target, key, value, recevier);
+      }
+    },
+  });
 }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   reactive,
+      //   effect,
+      //   ref,
+      //   toRef,
+      //   toRefs,
+      //   proxyRefs
+      // } from "/node_modules/vue/dist/vue.esm-browser.js";
+
+      // 自己的
+      import {
+        reactive,
+        effect,
+        ref,
+        toRef,
+        toRefs,
+        proxyRefs,
+      } from "../dist/reactivity.js";
+      // const obj ={name:'jt'}
+      let state = reactive({ name: "jw", age: 30 });
+      //能不能实现name.value呢,不想通过state去访问？ 就用的toRef
+      // let name = toRef(state, "name"); //看似毫无意义，但是有种情况：{...state} 丧失响应式了
+      //这样一个个转麻烦 可以用到批量转方法 toRefs
+      // const { name, age } = toRefs(state);
+      // console.log(name.value, age.value);
+
+      setTimeout(() => {}, 1000);
+      // 都要通过.value取值，比如在模板里取值 <div>{{name.value}}> 繁琐,因此内部实现了 proxyRefs 它会判断是否ref 帮你去掉.value
+      let proxy = proxyRefs({...toRefs(state)});
+      // console.log(proxy.name,proxy.age,'dddd'); //可以去掉.value
+      console.log(proxy.age,proxy.name); //输出是对象
+      proxy.age = 2000;
+      proxy.name='lll'
+      effect(() => {
+        console.log(proxy.age,proxy.name);//赋值后 输出是值 待追溯原因????
+      });
+    </script>
+  </body>
+</html>
