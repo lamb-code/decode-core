@@ -64,6 +64,13 @@ export class ReactiveEffect {
       postCleanEffect(this);
     }
   }
+  stop() {
+    if (this.active) {
+      this.active = false;
+      preCleanEffect(this);
+      postCleanEffect(this);
+    }
+  }
 }
 function cleanDepEffect(dep, effect) {
   dep.delete(effect);
@@ -96,8 +103,8 @@ export function trackEffect(effect, dep) {
 }
 export function triggerEffects(dep) {
   for (let effect of dep.keys()) {
-    if(effect._dirtyLevel<DirtyLevels.Dirty){
-      effect._dirtyLevel=DirtyLevels.Dirty
+    if (effect._dirtyLevel < DirtyLevels.Dirty) {
+      effect._dirtyLevel = DirtyLevels.Dirty;
     }
     if (!effect._running) {
       //如果不是正在执行，才只执行 防止递归调用

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   reactive,
+      //   effect,
+      //   watch,
+      //   watchEffect,
+      // } from "/node_modules/vue/dist/vue.esm-browser.js";
+
+      // console.log(watch,watchEffect);
+      // 自己的
+      import { reactive, effect, watch,watchEffect } from "../dist/reactivity.js";
+      // 计算属性 具有缓存作用，比如下面多次访问只会执行一次 只打印了一次 runner
+      const state = reactive({ name: "jw", age: 20 });
+      watchEffect(() => {
+        console.log(state.name + state.age);
+      });
+
+      effect(() => {});
+
+      setTimeout(() => {
+        state.name = "jt";
+      }, 1000);
+    </script>
+  </body>
+</html>

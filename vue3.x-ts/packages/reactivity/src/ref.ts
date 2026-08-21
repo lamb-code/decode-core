@@ -71,10 +71,14 @@ export function proxyRefs(objectWithRef) {
       const oldValue = target[key];
       if (oldValue.__v_isRef) {
         oldValue.value = value;
-        return true
+        return true;
       } else {
         return Reflect.set(target, key, value, recevier);
       }
     },
   });
+}
+
+export function isRef(value) {
+  return value && value.__v_isRef;
 }
