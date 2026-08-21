@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   reactive,
+      //   effect,
+      //   ref
+      // } from "/node_modules/vue/dist/vue.esm-browser.js";
+
+      // 自己的
+      import { reactive, effect,ref } from "../dist/reactivity.js";
+      //ractive有个缺陷 只能对对象进行代理，很多时候我们声明变量时就是个普通值 不大可能会去包装成一个对象再reactive
+      // const obj = { name: "jane", age: 30, flag: true, address: { n: 1 } };
+      const flag = ref(false)// ref原理其实给你的值包装成一个对象 
+      // const flag = ref({}) //ref 也可以放对象
+      //包装成大致如下
+      // let flag={
+      //   _v:false,
+      //   get value(){ 取值的时候搜集effect
+      //     return this._v
+      //   },
+      //   set value(newVal){
+      //     this._v=newVal 更新effect
+      //   }
+      // }
+      // const state = reactive(obj);
+
+      effect(() => {
+        app.innerHTML = flag.value?'test':'dfdf';
+      });
+
+      setTimeout(() => {
+        flag.value=true
+      }, 1000);
+    </script>
+  </body>
+</html>
