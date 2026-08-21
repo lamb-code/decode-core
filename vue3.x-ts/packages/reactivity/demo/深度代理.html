@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      import {
+        reactive,
+        effect,
+      } from "/node_modules/vue/dist/vue.esm-browser.js";
+
+      // 自己的
+      // import { reactive, effect } from "../dist/reactivity.js";
+
+      const obj = { name: "jane", age: 30, flag: true,address:{n:1} };
+      const state = reactive(obj);
+      //这差不多是递归调用
+      effect(() => {
+        app.innerHTML = state.address.n;
+        // state.name = Math.random(); //如果本次在执行effect的时候 更新了数据不会触发effect更新
+      });
+
+      // setTimeout(() => {
+      //   state.flag = false;
+      // }, 1000);
+      setTimeout(() => {
+        state.address.n = 2; //页面没有更新，原因是我们之前只做了第一层属性，多层属性没做处理
+      }, 1000);
+    </script>
+  </body>
+</html>

@@ -5,33 +5,34 @@ export function effect(fn, options) {
     _effect.run();
   });
   _effect.run();
-  if(options){
-    Object.assign(_effect,options)
+  if (options) {
+    Object.assign(_effect, options);
   }
-  const runner = _effect.run.bind(_effect)
-  runner.effect=_effect //在runner方法绑定自己
+  const runner = _effect.run.bind(_effect);
+  runner.effect = _effect; //在runner方法绑定自己
   // return _effect;
-  return runner
+  return runner;
 }
 export let activeEffect;
 function preCleanEffect(effect) {
   effect._depsLength = 0;
   effect._trackId++; //每次执行id都是+1 如果当前同一个effect执行id就是相同的
 }
-function postCleanEffect(effect){
-  if(effect.deps.length>effect._depsLength){
-    for(let i = effect._depsLength;i<effect.deps.length;i++){
-      cleanDepEffect(effect.deps[i],effect)
+function postCleanEffect(effect) {
+  if (effect.deps.length > effect._depsLength) {
+    for (let i = effect._depsLength; i < effect.deps.length; i++) {
+      cleanDepEffect(effect.deps[i], effect);
     }
-    effect.deps.length=effect._depsLength
+    effect.deps.length = effect._depsLength;
   }
 }
 class ReactiveEffect {
   _trackId = 0;
   deps = [];
   _depsLength = 0;
+  _running = 0; //控制递归掉用
   public active = true; //标记是否是响应式 默认是
-  constructor(public fn, public scheduler) {} //fn就是effect函数的参数函数
+  constructor(public fn, public scheduler) { } //fn就是effect函数的参数函数
   run() {
     if (!this.active) {
       return this.fn(); //不是激活的 执行后 什么都不用做
@@ -43,13 +44,14 @@ class ReactiveEffect {
     try {
       //effect重新执行前需要将上一次的依赖清理,为什么需要清理？
       preCleanEffect(this);
-
+      this._running++; //正在执行++
       //为什么需要try,fn执行完之后 activeEffect没有意义了
       activeEffect = this;
       return this.fn();
     } finally {
+      this._running-- //执行完--,然后在triggerEffects控制
       activeEffect = lastEffect;
-      postCleanEffect(this)
+      postCleanEffect(this);
     }
   }
 }
@@ -84,8 +86,12 @@ export function trackEffect(effect, dep) {
 }
 export function triggerEffects(dep) {
   for (let effect of dep.keys()) {
-    if (effect.scheduler) {
-      effect.scheduler();
+    if (!this._running) {
+      //如果不是正在执行，才只执行 防止递归调用
+      if (effect.scheduler) {
+        effect.scheduler();
+
+      }
     }
   }
 }
