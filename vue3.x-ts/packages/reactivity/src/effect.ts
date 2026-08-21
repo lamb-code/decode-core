@@ -1,3 +1,5 @@
+import { DirtyLevels } from "./constant";
+
 export function effect(fn, options) {
   //创建一个响应式effect 数据变化可以重新执行
   //创建一个effect 只要依赖的属性变化就要执行回调
@@ -26,14 +28,22 @@ function postCleanEffect(effect) {
     effect.deps.length = effect._depsLength;
   }
 }
-class ReactiveEffect {
+export class ReactiveEffect {
   _trackId = 0;
   deps = [];
   _depsLength = 0;
   _running = 0; //控制递归掉用
+  _dirtyLevel = DirtyLevels.Dirty; //处理计算属性用的
   public active = true; //标记是否是响应式 默认是
-  constructor(public fn, public scheduler) { } //fn就是effect函数的参数函数
+  constructor(public fn, public scheduler) {} //fn就是effect函数的参数函数
+  public get dirty() {
+    return this._dirtyLevel == DirtyLevels.Dirty;
+  }
+  public set dirty(v) {
+    this._dirtyLevel = v ? DirtyLevels.Dirty : DirtyLevels.NoDirty;
+  }
   run() {
+    this._dirtyLevel = DirtyLevels.NoDirty; //每次运行后effect 变为NoDirty
     if (!this.active) {
       return this.fn(); //不是激活的 执行后 什么都不用做
     }
@@ -49,7 +59,7 @@ class ReactiveEffect {
       activeEffect = this;
       return this.fn();
     } finally {
-      this._running-- //执行完--,然后在triggerEffects控制
+      this._running--; //执行完--,然后在triggerEffects控制
       activeEffect = lastEffect;
       postCleanEffect(this);
     }
@@ -86,11 +96,13 @@ export function trackEffect(effect, dep) {
 }
 export function triggerEffects(dep) {
   for (let effect of dep.keys()) {
+    if(effect._dirtyLevel<DirtyLevels.Dirty){
+      effect._dirtyLevel=DirtyLevels.Dirty
+    }
     if (!effect._running) {
       //如果不是正在执行，才只执行 防止递归调用
       if (effect.scheduler) {
         effect.scheduler();
-
       }
     }
   }
