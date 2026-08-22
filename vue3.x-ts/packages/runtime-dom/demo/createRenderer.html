@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      import {
+        // createRenderer,
+        // render,
+        h,
+      } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+
+      import {
+        renderOptions,
+        createRenderer,
+        render,
+      } from "../dist/runtime-dom.js";
+      let ele = h(
+        "h1",
+        {
+          style: { color: "red" },
+          class: "test",
+          id: "555",
+          onClick: () => alert(1),
+        },
+        "janetao"
+      );
+      render(ele, app);
+    </script>
+  </body>
+</html>
