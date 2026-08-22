@@ -1,5 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
-import { isSameVnode, Text } from "./createVnode";
+import { Fragment, isSameVnode, Text } from "./createVnode";
 import getSequence from "./seq";
 
 /**
@@ -68,6 +68,13 @@ export function createRenderer(renderOptions) {
       mountElement(n2, container, anchor);
     } else {
       patchElement(n1, n2, container);
+    }
+  };
+  const processFragment = (n1, n2, container) => {
+    if (n1 == null) {
+      mountChildren(n2.children, container);
+    } else {
+      patchChildren(n1, n2, container);
     }
   };
   const processText = (n1, n2, container) => {
@@ -287,11 +294,20 @@ export function createRenderer(renderOptions) {
       case Text:
         processText(n1, n2, container);
         break;
+      case Fragment:
+        processFragment(n1, n2, container);
+        break;
       default:
         processElement(n1, n2, container, anchor);
     }
   };
-  const unmount = (vnode) => hostRemove(vnode.el);
+  const unmount = (vnode) => {
+    if (vnode.type == Fragment) {
+      unmountChildren(vnode.children);
+    } else {
+      hostRemove(vnode.el);
+    }
+  };
   //多次调用render 会进行虚拟节点比较 在进行更新
   const render = (vnode, container) => {
     // console.log(vnode, "vnode", container);
