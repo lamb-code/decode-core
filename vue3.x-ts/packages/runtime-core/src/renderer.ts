@@ -1,5 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
-import { isSameVnode } from "./createVnode";
+import { isSameVnode, Text } from "./createVnode";
 import getSequence from "./seq";
 
 /**
@@ -68,6 +68,18 @@ export function createRenderer(renderOptions) {
       mountElement(n2, container, anchor);
     } else {
       patchElement(n1, n2, container);
+    }
+  };
+  const processText = (n1, n2, container) => {
+    if (n1 == null) {
+      // 1.虚拟节点要关联真实节点
+      // 2.将节点插入到页面中
+      hostInsert((n2.el = hostCreateText(n2.children)), container);
+    } else {
+      const el = (n2.el = n1.el);
+      if (n1.children !== n2.children) {
+        hostSetText(el, n2.children);
+      }
     }
   };
   const patchProps = (oldProps, newProps, el) => {
@@ -270,7 +282,14 @@ export function createRenderer(renderOptions) {
       unmount(n1);
       n1 = null; //后续会执行n2的初始化
     }
-    processElement(n1, n2, container, anchor);
+    const { type } = n2;
+    switch (type) {
+      case Text:
+        processText(n1, n2, container);
+        break;
+      default:
+        processElement(n1, n2, container, anchor);
+    }
   };
   const unmount = (vnode) => hostRemove(vnode.el);
   //多次调用render 会进行虚拟节点比较 在进行更新
@@ -282,9 +301,10 @@ export function createRenderer(renderOptions) {
         // console.log(container._vnode);
         unmount(container._vnode);
       }
+    } else {
+      patch(container._vnode || null, vnode, container);
+      container._vnode = vnode;
     }
-    patch(container._vnode || null, vnode, container);
-    container._vnode = vnode;
   };
   return { render };
 }
