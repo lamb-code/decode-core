@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // 原生的
+    import {
+      // createRenderer,
+      // render,
+      // h,
+    } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+
+    import {
+      renderOptions,
+      createRenderer,
+      render,
+      h
+    } from "../dist/runtime-dom.js";
+    //h函数可以一个，有两个，三个 或者超过三个 有多种写法 超过三个  第三个开始都是儿子
+    // h(类型,属性,儿子)
+    //h(类型,儿子)
+    //***1.两个参数时 第二个参数可能是属性或者虚拟节点 怎么区分？？
+    //2.第二个参数是数组 那就是儿子
+    //3.直接传递非对象的(文本),也是儿子
+    // 4.不能出现三个参数的时候 第二个只能是属性
+    //5.如果超过三个参数后面都是儿子
+    let ele = h(
+      "h1",
+      {
+        style: { color: "red" },
+        class: "test",
+        id: "555",
+        onClick: () => alert(1),
+      },
+      "janetao"
+    );
+    let ele1=h()
+    render(ele, app);
+  </script>
+</body>
+
+</html>
