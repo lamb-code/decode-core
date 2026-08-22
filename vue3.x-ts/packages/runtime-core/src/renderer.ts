@@ -1,5 +1,6 @@
 import { ShapeFlags } from "@vue/shared";
 import { isSameVnode } from "./createVnode";
+import getSequence from "./seq";
 
 /**
  * createRenderer 【渲染器工厂函数】
@@ -147,6 +148,9 @@ export function createRenderer(renderOptions) {
       let s1 = i;
       let s2 = i;
       const keyToNewIndexMap = new Map(); // 做一个映射表用于快速查找， 看老的是否在新的里面还有，没有就删除，有的话就更新
+      let toBePatched = e2 - s2 + 1; // 要倒序插入的个数
+
+      let newIndexToOldMapIndex = new Array(toBePatched).fill(0);
 
       //循环新的
       for (let i = s2; i <= e2; i++) {
@@ -163,7 +167,7 @@ export function createRenderer(renderOptions) {
         } else {
           // 比较前后节点的差异，更新属性和儿子
           // 我们i 可能是0的情况，为了保证0 是没有比对过的元素，直接 i+1
-          //   newIndexToOldMapIndex[newIndex - s2] = i + 1; // [5,3,4,0]
+          newIndexToOldMapIndex[newIndex - s2] = i + 1; // [5,3,4,0]
           patch(vnode, c2[newIndex], el); // 服用
         }
       }
@@ -173,7 +177,9 @@ export function createRenderer(renderOptions) {
       // 插入的过程中，可能新的元素的多，需要创建
 
       // 先从索引为3的位置倒序插入
-      let toBePatched = e2 - s2 + 1; // 要倒序插入的个数
+      let increasingSeq = getSequence(newIndexToOldMapIndex);
+      let j = increasingSeq.length - 1; // 索引
+
       for (let i = toBePatched - 1; i >= 0; i--) {
         // 3 2 1 0
         let newIndex = s2 + i; // h 对应的索引，找他的下一个元素作为参照物，来进行插入
@@ -183,7 +189,11 @@ export function createRenderer(renderOptions) {
           // 新列表中新增的元素
           patch(null, vnode, el, anchor); // 创建h插入
         } else {
-          hostInsert(vnode.el, el, anchor); // 接着倒序插入
+          if (i == increasingSeq[j]) {
+            j--; // 做了diff算法有的优化
+          } else {
+            hostInsert(vnode.el, el, anchor); // 接着倒序插入
+          }
         }
       }
       // 倒序比对每一个元素，做插入操作
