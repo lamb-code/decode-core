@@ -43,7 +43,7 @@ export function createRenderer(renderOptions) {
    * 职责：vnode -> 生成真实DOM，处理属性、处理子节点、插入页面
    * 仅在首次渲染(n1===null)时调用，更新阶段不走这里，走diff对比逻辑
    */
-  const mountElement = (vnode, container) => {
+  const mountElement = (vnode, container, anchor) => {
     const { type, children, props, shapeFlag } = vnode;
     //第一次渲染的时候让虚拟节点和真实DOM创建关联，第二次渲染新的vnodek可以和上一次的vnode做比对，之后更新对应的el元素 可以后续复用这个dom元素
     let el = (vnode.el = hostCreateElement(type));
@@ -58,13 +58,13 @@ export function createRenderer(renderOptions) {
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren(children, el);
     }
-    hostInsert(el, container);
+    hostInsert(el, container, anchor);
   };
-  const processElement = (n1, n2, container) => {
+  const processElement = (n1, n2, container, anchor) => {
     if (n1 == null) {
       //初始化操作
 
-      mountElement(n2, container);
+      mountElement(n2, container, anchor);
     } else {
       patchElement(n1, n2, container);
     }
@@ -120,7 +120,74 @@ export function createRenderer(renderOptions) {
       e1--;
       e2--;
     }
-    console.log(i, e1, e2);
+    //新的多
+    if (i > e1) {
+      if (i <= e2) {
+        // 有插入的部分
+        // insert()
+        let nextPos = e2 + 1; // 看一下当前下一个元素是否存在
+        let anchor = c2[nextPos]?.el;
+        while (i <= e2) {
+          patch(null, c2[i], el, anchor);
+          i++;
+        }
+      }
+    } else if (i > e2) {
+      if (i <= e1) {
+        while (i <= e1) {
+          unmount(c1[i]); // 将元素一个个删除
+          i++;
+        }
+      }
+    } else {
+      // 以上确认不变化的节点，并且对插入和移除做了处理
+
+      // 后面就是特殊的比对方式了
+
+      let s1 = i;
+      let s2 = i;
+      const keyToNewIndexMap = new Map(); // 做一个映射表用于快速查找， 看老的是否在新的里面还有，没有就删除，有的话就更新
+
+      //循环新的
+      for (let i = s2; i <= e2; i++) {
+        const vnode = c2[i];
+        keyToNewIndexMap.set(vnode.key, i);
+      }
+      //循环旧的
+      for (let i = s1; i <= e1; i++) {
+        const vnode = c1[i];
+        const newIndex = keyToNewIndexMap.get(vnode.key); // 通过key找到对应的索引
+        if (newIndex == undefined) {
+          // 如果新的里面找不到则说明老的有的要删除掉
+          unmount(vnode);
+        } else {
+          // 比较前后节点的差异，更新属性和儿子
+          // 我们i 可能是0的情况，为了保证0 是没有比对过的元素，直接 i+1
+          //   newIndexToOldMapIndex[newIndex - s2] = i + 1; // [5,3,4,0]
+          patch(vnode, c2[newIndex], el); // 服用
+        }
+      }
+      // 调整顺序
+      // 我们可以按照新的队列 倒序插入insertBefore 通过参照物往前面插入
+
+      // 插入的过程中，可能新的元素的多，需要创建
+
+      // 先从索引为3的位置倒序插入
+      let toBePatched = e2 - s2 + 1; // 要倒序插入的个数
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        // 3 2 1 0
+        let newIndex = s2 + i; // h 对应的索引，找他的下一个元素作为参照物，来进行插入
+        let anchor = c2[newIndex + 1]?.el;
+        let vnode = c2[newIndex];
+        if (!vnode.el) {
+          // 新列表中新增的元素
+          patch(null, vnode, el, anchor); // 创建h插入
+        } else {
+          hostInsert(vnode.el, el, anchor); // 接着倒序插入
+        }
+      }
+      // 倒序比对每一个元素，做插入操作
+    }
   };
   const patchChildren = (n1, n2, el) => {
     //子节点三种情况 文本 数组 和 null
@@ -187,13 +254,13 @@ export function createRenderer(renderOptions) {
     //子节点比对
     patchChildren(n1, n2, el);
   };
-  const patch = (n1, n2, container) => {
+  const patch = (n1, n2, container, anchor = null) => {
     if (n1 == n2) return;
     if (n1 && !isSameVnode(n1, n2)) {
       unmount(n1);
       n1 = null; //后续会执行n2的初始化
     }
-    processElement(n1, n2, container);
+    processElement(n1, n2, container, anchor);
   };
   const unmount = (vnode) => hostRemove(vnode.el);
   //多次调用render 会进行虚拟节点比较 在进行更新
