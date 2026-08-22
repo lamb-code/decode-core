@@ -80,7 +80,65 @@ export function createRenderer(renderOptions) {
       }
     }
   };
-  const patchChildren = (n1, n2, container) => {};
+  const unmountChildren = (children) => {
+    for (let i = 0; i < children.length; i++) {
+      let child = children[i];
+      unmount(child);
+    }
+  };
+  const patchChildren = (n1, n2, el) => {
+    //子节点三种情况 文本 数组 和 null
+    // 新文本  旧数组  → 删除所有旧子节点，设置文本
+    // 2. 新文本  旧文本  → 更新文本
+    // 3. 新文本  旧空   → 设置文本
+    // 4. 新数组  旧数组  → 数组 diff（patchKeyedChildren）
+    // 5. 新数组  旧文本  → 清空文本，挂载数组子节点
+    // 6. 新数组  旧空   → 挂载数组子节点
+    // 7. 新空   旧数组  → 删除全部旧子节点
+    //  8. 新空   旧文本  → 清空文本
+    //  9. 新空   旧空   → 无需处理
+    const c1 = n1.children;
+    const c2 = n2.children;
+    const prevShapeFlag = n1.shapeFlag;
+    const shapeFlag = n2.shapeFlag;
+    // ---------------------- 分支1：新子节点是文本 ----------------------
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      // 场景：新儿子=文本，旧儿子=数组
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        unmountChildren(c1);
+      }
+      // 新旧文本内容不一样的时候，才更新DOM文本，避免不必要渲染
+      // 覆盖两种场景：新文本+旧文本、新文本+旧空
+      if (c1 !== c2) {
+        hostSetElementText(el, c2);
+      }
+    }
+    // ---------------------- 分支2：新子节点为【数组】或者【空】 ----------------------
+    else {
+      // 判断旧儿子是不是数组
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        //场景：旧数组，新数组 → 执行完整key diff算法比对子节点
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          //diff算法
+        } else {
+          unmountChildren(c1);
+        }
+      }
+      //旧儿子：文本 / 空
+      else {
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+          //场景：旧儿子=文本，先清空父元素上的旧文本
+          hostSetElementText(el, "");
+        }
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          //场景1：旧文本 + 新数组
+          //场景2：旧空 + 新数组
+          //挂载新的数组子节点
+          mountChildren(c2, el);
+        }
+      }
+    }
+  };
   const patchElement = (n1, n2, container) => {
     //比较元素的差异 肯定需要复用dom元素
     // 比较属性和元素的子节点
@@ -90,7 +148,7 @@ export function createRenderer(renderOptions) {
     //属性比对
     patchProps(oldProps, newProps, el);
     //子节点比对
-    patchChildren(n1, n2, container);
+    patchChildren(n1, n2, el);
   };
   const patch = (n1, n2, container) => {
     if (n1 == n2) return;
