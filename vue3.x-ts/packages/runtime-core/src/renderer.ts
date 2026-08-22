@@ -1,6 +1,7 @@
 import { ShapeFlags } from "@vue/shared";
 import { Fragment, isSameVnode, Text } from "./createVnode";
 import getSequence from "./seq";
+import { reactive, ReactiveEffect } from "@vue/reactivity";
 
 /**
  * createRenderer 【渲染器工厂函数】
@@ -87,6 +88,42 @@ export function createRenderer(renderOptions) {
       if (n1.children !== n2.children) {
         hostSetText(el, n2.children);
       }
+    }
+  };
+  const mountComponent = (n2, container, anchor) => {
+    //组件可以基于自己的状态重新渲染，就是一个effect
+    const { data = () => {}, render } = n2;
+    const state = reactive(data()); //组件的状态
+    const instance = {
+      state,
+      vnode: n2,
+      subTree: null,
+      isMounted: true,
+      update: null,
+    };
+    const componentUpdateFn = () => {
+      //我们要在这区分是第一次还是之后的所以用到实例
+      if (!instance.isMounted) {
+        const subTree = render.call(state, state);
+        instance.subTree = subTree;
+        patch(null, subTree, container, anchor);
+        instance.isMounted = true;
+      } else {
+        const subTree = render.call(state, state);
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+    const update = (instance.update = () => {
+      effect.run();
+    });
+    const effect = new ReactiveEffect(componentUpdateFn, () => update());
+    update();
+  };
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 == null) {
+      mountComponent(n2, container, anchor);
+    } else {
     }
   };
   const patchProps = (oldProps, newProps, el) => {
@@ -289,7 +326,7 @@ export function createRenderer(renderOptions) {
       unmount(n1);
       n1 = null; //后续会执行n2的初始化
     }
-    const { type } = n2;
+    const { type, shapeFlag } = n2;
     switch (type) {
       case Text:
         processText(n1, n2, container);
@@ -298,7 +335,11 @@ export function createRenderer(renderOptions) {
         processFragment(n1, n2, container);
         break;
       default:
-        processElement(n1, n2, container, anchor);
+        if (shapeFlag & ShapeFlags.ELEMENT) {
+          processElement(n1, n2, container, anchor);
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(n1, n2, container, anchor);
+        }
     }
   };
   const unmount = (vnode) => {
