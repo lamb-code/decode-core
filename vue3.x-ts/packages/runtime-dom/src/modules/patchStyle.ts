@@ -10,6 +10,15 @@
 
 export default function patchStyle(el, prevValue, nextValue) {
   let style = el.style;
+  // 新样式为null：清空全部旧样式，直接return
+  if (nextValue == null) {
+    if (prevValue) {
+      for (const key in prevValue) {
+        style[key] = null;
+      }
+    }
+    return;
+  }
   for (let key in nextValue) {
     style[key] = nextValue[key];
   }
