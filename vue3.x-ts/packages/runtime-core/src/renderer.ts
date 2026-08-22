@@ -1,4 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
+import { isSameVnode } from "./createVnode";
 
 /**
  * createRenderer 【渲染器工厂函数】
@@ -44,10 +45,12 @@ export function createRenderer(renderOptions) {
    */
   const mountElement = (vnode, container) => {
     const { type, children, props, shapeFlag } = vnode;
-    let el = hostCreateElement(type);
+    //第一次渲染的时候让虚拟节点和真实DOM创建关联，第二次渲染新的vnodek可以和上一次的vnode做比对，之后更新对应的el元素 可以后续复用这个dom元素
+    let el = (vnode.el = hostCreateElement(type));
     if (props) {
       for (let key in props) {
-        hostPatchProp(el, key, null);
+        console.log(key);
+        hostPatchProp(el, key, null, props[key]);
       }
     }
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
@@ -57,17 +60,59 @@ export function createRenderer(renderOptions) {
     }
     hostInsert(el, container);
   };
-  const patch = (n1, n2, container) => {
-    if (n1 == n2) return;
+  const processElement = (n1, n2, container) => {
     if (n1 == null) {
       //初始化操作
+
       mountElement(n2, container);
+    } else {
+      patchElement(n1, n2, container);
     }
   };
+  const patchProps = (oldProps, newProps, el) => {
+    //新的属性全部生效
+    for (let key in newProps) {
+      hostPatchProp(el, key, oldProps[key], newProps[key]);
+    }
+    for (let key in oldProps) {
+      if (!(key in newProps)) {
+        hostPatchProp(el, key, oldProps[key], null);
+      }
+    }
+  };
+  const patchChildren = (n1, n2, container) => {};
+  const patchElement = (n1, n2, container) => {
+    //比较元素的差异 肯定需要复用dom元素
+    // 比较属性和元素的子节点
+    let el = (n2.el = n1.el);
+    let oldProps = n1.props || {};
+    let newProps = n2.props || {};
+    //属性比对
+    patchProps(oldProps, newProps, el);
+    //子节点比对
+    patchChildren(n1, n2, container);
+  };
+  const patch = (n1, n2, container) => {
+    if (n1 == n2) return;
+    if (n1 && !isSameVnode(n1, n2)) {
+      unmount(n1);
+      n1 = null; //后续会执行n2的初始化
+    }
+    processElement(n1, n2, container);
+  };
+  const unmount = (vnode) => hostRemove(vnode.el);
   //多次调用render 会进行虚拟节点比较 在进行更新
   const render = (vnode, container) => {
-    console.log(vnode, "vnode", container);
+    // console.log(vnode, "vnode", container);
+    if (vnode == null) {
+      //我要移除当前容器的dom元素
+      if (container._vnode) {
+        // console.log(container._vnode);
+        unmount(container._vnode);
+      }
+    }
     patch(container._vnode || null, vnode, container);
+    container._vnode = vnode;
   };
   return { render };
 }
