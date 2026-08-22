@@ -86,6 +86,42 @@ export function createRenderer(renderOptions) {
       unmount(child);
     }
   };
+  const patchKeyedChildren = (c1, c2, el) => {
+    //比较两个儿子的差异更新el
+    let i = 0; //开始比对的索引
+    let e1 = c1.length - 1; //第一个数组的尾部索引
+    let e2 = c2.length - 1; //第二个数组尾部索引
+
+    //从头开始比对
+    while (i <= e1 && i <= e2) {
+      // 有任何一方循环结束了 就要终止比较
+      const n1 = c1[i];
+      const n2 = c2[i];
+      if (isSameVnode(n1, n2)) {
+        patch(n1, n2, el); // 更新当前节点的属性和儿子（递归比较子节点）
+      } else {
+        break;
+      }
+      i++;
+    }
+
+    //从尾部开始比
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[e1];
+      const n2 = c2[e2];
+      // i =0
+      // [a,b,c]  // e1 = 2
+      // [d,a,b,c]; // e2 = 3
+      if (isSameVnode(n1, n2)) {
+        patch(n1, n2, el); // 更新当前节点的属性和儿子（递归比较子节点）
+      } else {
+        break;
+      }
+      e1--;
+      e2--;
+    }
+    console.log(i, e1, e2);
+  };
   const patchChildren = (n1, n2, el) => {
     //子节点三种情况 文本 数组 和 null
     // 新文本  旧数组  → 删除所有旧子节点，设置文本
@@ -120,6 +156,7 @@ export function createRenderer(renderOptions) {
         //场景：旧数组，新数组 → 执行完整key diff算法比对子节点
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           //diff算法
+          patchKeyedChildren(c1, c2, el);
         } else {
           unmountChildren(c1);
         }
