@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="root"></div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   ref,
+      //   Fragment,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      import {
+        render,
+        h,
+        ref,
+        Text,
+        Fragment,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance
+      } from "../dist/runtime-dom.js";
+      const ChildComponent = {
+        props: {
+          value: String,
+        },
+        setup(props, { emit, attrs, expose, slots }) {
+          // expose({name:'jw'})
+          return () => {
+            return h("div", props.value);
+          };
+        },
+      };
+      const VueComponent = {
+        setup(props, { emit, attrs, expose, slots }) {
+          const comp = ref(null);
+          const val = ref(1)
+          //内部如果 ref放到组件上 指代的就是组件实例 如果当前组件有expose 那就是expose
+          // 如果放到dom元素上指代的就是dom元素
+          onMounted(()=>{
+            console.log(comp.value)//这个获取的是组件的实例。 如果子组件写了 expose 这个获取的就是expose暴露出来的值，expose 原理其实 instanve = value,如果是元素就是取的dom元素
+          })
+          return () => {
+            return h(ChildComponent, { value: val.value,ref:comp });
+          };
+        },
+      };
+      render(h(VueComponent), app);
+    </script>
+  </body>
+</html>
