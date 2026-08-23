@@ -93,7 +93,7 @@ export function createRenderer(renderOptions) {
   };
   const mountComponent = (n2, container, anchor) => {
     //组件可以基于自己的状态重新渲染，就是一个effect
-    const { data = () => {}, render } = n2;
+    const { data = () => {}, render } = n2.type;
     const state = reactive(data()); //组件的状态
     const instance = {
       state,

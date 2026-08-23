@@ -10,15 +10,15 @@
     <div id="app"></div>
     <script type="module">
       // 原生的
-      import {
-        createRenderer,
-        render,
-        h,
-        Text,
-        Fragment,
-      } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
 
-      // import { render, h, Text,Fragment } from "../dist/runtime-dom.js";
+      import { render, h, Text,Fragment } from "../dist/runtime-dom.js";
       const VueComponent = {
         data() {
           return {
@@ -29,13 +29,11 @@
         render() {
           console.log('render')
           //this== 组件实例 内部不会通过类来产生实例
-          setTimeout(() => {
-            this.age++;
-            this.age++;
-
-            this.age++;
-
-          }, 1000);
+          // setTimeout(() => {
+          //   this.age++;
+          //   this.age++;
+          //   this.age++;
+          // }, 1000);
           return h("div", [
             h(Text, "my name is " + this.name),
             h("a", this.age),
