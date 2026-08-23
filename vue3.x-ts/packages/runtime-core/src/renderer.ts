@@ -99,6 +99,14 @@ export function createRenderer(renderOptions) {
     instance.vnode = next;
     updateProps(instance, instance.props, next.props);
   };
+  const renderComponent = (instance) => {
+    const { render, vnode, proxy, props, attrs } = instance;
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      return render.call(proxy, proxy);
+    } else {
+      return vnode.type(attrs);
+    }
+  };
   const setupRenderEffect = (instance, container, anchor) => {
     const { render } = instance;
     const componentUpdateFn = () => {
@@ -110,7 +118,8 @@ export function createRenderer(renderOptions) {
           invokeArray(bm);
         }
         // const subTree = render.call(state, state);
-        const subTree = render.call(instance.proxy, instance.proxy);
+        // const subTree = render.call(instance.proxy, instance.proxy);
+        const subTree = renderComponent(instance);
         instance.subTree = subTree;
         patch(null, subTree, container, anchor);
         instance.isMounted = true;
@@ -127,7 +136,8 @@ export function createRenderer(renderOptions) {
         if (bu) {
           invokeArray(bu);
         }
-        const subTree = render.call(instance.proxy, instance.proxy);
+        // const subTree = render.call(instance.proxy, instance.proxy);
+        const subTree = renderComponent(instance);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
         if (u) {
@@ -499,12 +509,13 @@ export function createRenderer(renderOptions) {
     }
   };
   function setRef(rawRef, vnode) {
-    const value = vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
-      ? vnode.component.exposed || vnode.component.proxy
-      : vnode.el;
-      if(isRef(rawRef)){
-        rawRef.value=value
-      }
+    const value =
+      vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT
+        ? vnode.component.exposed || vnode.component.proxy
+        : vnode.el;
+    if (isRef(rawRef)) {
+      rawRef.value = value;
+    }
   }
   const unmount = (vnode) => {
     const { shapeFlag } = vnode;
