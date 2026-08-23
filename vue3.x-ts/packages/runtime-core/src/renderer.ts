@@ -91,17 +91,46 @@ export function createRenderer(renderOptions) {
       }
     }
   };
-  const mountComponent = (n2, container, anchor) => {
+  //初始化属性
+  const initProps = (instance, rawProps) => {
+    const props = {};
+    const attrs = {};
+    const propsOptions = instance.propsOptions || {};
+    if (rawProps) {
+      for (let key in rawProps) {
+        //用所有的props 区分props atrrs
+        const value = rawProps[key];
+        if (key in propsOptions) {
+          props[key] = value;
+        } else {
+          attrs[key] = value;
+        }
+      }
+    }
+    instance.attrs = attrs;
+    instance.props = reactive(props);
+  };
+  const mountComponent = (vnode, container, anchor) => {
     //组件可以基于自己的状态重新渲染，就是一个effect
-    const { data = () => {}, render } = n2.type;
+    const { data = () => {}, render, props: propsOptions = {} } = vnode.type;
     const state = reactive(data()); //组件的状态
     const instance = {
       state,
-      vnode: n2,
+      vnode,
       subTree: null,
       isMounted: true,
       update: null,
+      props: {},
+      attrs: {},
+      propsOptions,
+      component:null
     };
+    vnode.component=instance
+    // 根据propsOptions 区分props和attrs
+    //元素更新的是 n2.el =>n1.el
+    //组件更新的是 n2.component.subTree.el = n2.component.subTree.el
+    initProps(instance, vnode.props);
+    console.log(instance);
     const componentUpdateFn = () => {
       //我们要在这区分是第一次还是之后的所以用到实例
       if (!instance.isMounted) {

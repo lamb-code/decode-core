@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      // 原生的
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+
+      import { render, h, Text, Fragment } from "../dist/runtime-dom.js";
+      //属性分为两种 attrs(非响应式) 和props(响应式)
+      // 所有属性  减去 propsOptions 就是attrs
+      const VueComponent = {
+        props: {
+          name: String,
+        },
+        // data() {
+        //   return {
+        //     name: "jw",
+        //     age: 30,
+        //   };
+        // },
+        render(proxy) {
+          //this== 组件实例 内部不会通过类来产生实例
+          return h("div", [
+            h(Text, "my name is " + proxy.$attrs.name),
+            h("a", proxy.$attrs.age),
+          ]);
+        },
+      };
+      //组件有两个虚拟节点 h(VueComponent) 产生的是组件的虚拟节点
+      // render函数 返回的虚拟节点，这个虚拟节点才是最终要渲染的内容(subTree)
+      render(h(VueComponent,{a:1,b:2,name:'jw',age:30}), app);
+    </script>
+  </body>
+</html>
