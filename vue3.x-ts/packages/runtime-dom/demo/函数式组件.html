@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="root"></div>
+    <script type="module">
+      // 原生的;
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   ref,
+      //   Fragment,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      import {
+        render,
+        h,
+        ref,
+        Text,
+        Fragment,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance
+      } from "../dist/runtime-dom.js";
+
+      function functionalComp(props) {
+        return h("div", props.a + props.b);
+      }
+      render(h(functionalComp,{a:1,b:2}), app);
+    </script>
+  </body>
+</html>
