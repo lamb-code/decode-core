@@ -39,9 +39,9 @@ const publicProperty = {
 };
 const handler = {
   get(target, key) {
-    const { state, props } = target;
-    if (state && hasOwn(state, key)) {
-      return state[key];
+    const { data, props } = target;
+    if (data && hasOwn(data, key)) {
+      return data[key];
     } else if (props && hasOwn(props, key)) {
       return props[key];
     }
@@ -50,9 +50,9 @@ const handler = {
   },
   // 对于一些属性无法修改的属性如 $slot $attrs... 那就去实例上取
   set(target, key, value) {
-    const { state, props } = target;
-    if (state && hasOwn(state, key)) {
-      state[key] = value;
+    const { data, props } = target;
+    if (data && hasOwn(data, key)) {
+      data[key] = value;
     } else if (props && hasOwn(props, key)) {
       //我们可以修改属性中的嵌套属性(内部不会报错)  但是不合法
       // props[key] = value;
