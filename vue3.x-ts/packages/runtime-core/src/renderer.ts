@@ -206,10 +206,43 @@ export function createRenderer(renderOptions) {
     // });
     // update();
   };
+  const hasPropsChange = (prevProps, nextProps) => {
+    let nextKeys = Object.keys(nextProps);
+    if (nextKeys.length !== Object.keys(prevProps).length) {
+      return true;
+    }
+    for (let i = 0; i < nextKeys.length; i++) {
+      const key = nextKeys[i];
+      if (nextProps[key] != prevProps[key]) {
+        return true;
+      }
+    }
+    return false;
+  };
+  const updateProps = (instance, prevProps, nextProps) => {
+    if (hasPropsChange(prevProps, nextProps)) {
+      for (let key in nextProps) {
+        instance.props[key] = nextProps[key];
+      }
+      for (let key in instance.props) {
+        if (!(key in nextProps)) {
+          delete instance.props[key];
+        }
+      }
+    }
+  };
+  const updateComponent = (n1, n2) => {
+    const instance = (n2.component = n1.component); //复用组件实例
+    const { props: prevProps } = n1;
+    const { props: nextProps } = n2;
+    updateProps(instance, prevProps, nextProps);
+  };
   const processComponent = (n1, n2, container, anchor) => {
-    if (n1 == null) {
+    if (n1 === null) {
       mountComponent(n2, container, anchor);
     } else {
+      //组件的更新
+      updateComponent(n1, n2);
     }
   };
   const patchProps = (oldProps, newProps, el) => {

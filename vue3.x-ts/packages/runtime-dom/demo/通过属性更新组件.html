@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // 原生的
+    // import {
+    //   createRenderer,
+    //   render,
+    //   h,
+    //   Text,
+    //   Fragment,
+    // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+
+    import { render, h, Text, Fragment } from "../dist/runtime-dom.js";
+    //组件更新 有三种方式 状态 属性 插槽(也算属性一种 包含children)
+    const RenderComponent = {
+      props: {
+        address: String
+      },
+      render() {
+        return h(Text, this.address)
+      }
+    };
+    const VueComponent = {
+      props: {},
+      data() {
+        return { flag: true, address: "bj" };
+      },
+      render() {
+        return h(Fragment, [
+          h("button", { onClick: () => { this.flag = !this.flag } }, "点我啊"),
+          h(RenderComponent, { address: this.flag ? "bj" : "sh" }),
+        ]);
+      },
+    };
+
+    render(h(VueComponent), app);
+  </script>
+</body>
+
+</html>
