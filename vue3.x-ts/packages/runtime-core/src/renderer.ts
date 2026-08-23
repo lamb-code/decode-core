@@ -1,4 +1,4 @@
-import { ShapeFlags } from "@vue/shared";
+import { hasOwn, ShapeFlags } from "@vue/shared";
 import { Fragment, isSameVnode, Text } from "./createVnode";
 import getSequence from "./seq";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
@@ -123,23 +123,58 @@ export function createRenderer(renderOptions) {
       props: {},
       attrs: {},
       propsOptions,
-      component:null
+      component: null,
+      proxy: null, //用来代理 props attrs data 让用户方便的取值
     };
-    vnode.component=instance
+    vnode.component = instance;
     // 根据propsOptions 区分props和attrs
     //元素更新的是 n2.el =>n1.el
     //组件更新的是 n2.component.subTree.el = n2.component.subTree.el
     initProps(instance, vnode.props);
-    console.log(instance);
+
+    //代理对象
+    const publicProperty ={
+      $attrs:(instance)=>instance.attrs
+    }
+    instance.proxy = new Proxy(instance, {
+      get(target, key) {
+        const { state, props } = target;
+        if (state && hasOwn(state, key)) {
+          return state[key];
+        } else if (props && hasOwn(props, key)) {
+          return props[key];
+        }
+        const getter = publicProperty[key]
+        return getter&&getter(target)
+      },
+      // 对于一些属性无法修改的属性如 $slot $attrs... 那就去实例上取
+      set(target, key, value) {
+        const { state, props } = target;
+        if (state && hasOwn(state, key)) {
+          state[key] = value;
+        } else if (props && hasOwn(props, key)) {
+          //我们可以修改属性中的嵌套属性(内部不会报错)  但是不合法
+          // props[key] = value;
+          console.warn('props is readonly')
+          return false
+        }
+        return true;
+      },
+    });
+
     const componentUpdateFn = () => {
       //我们要在这区分是第一次还是之后的所以用到实例
       if (!instance.isMounted) {
-        const subTree = render.call(state, state);
+        // const subTree = render.call(state, state);
+        const subTree = render.call(instance.proxy, instance.proxy);
+
         instance.subTree = subTree;
         patch(null, subTree, container, anchor);
         instance.isMounted = true;
       } else {
-        const subTree = render.call(state, state);
+        // const subTree = render.call(state, state);
+        const subTree = render.call(instance.proxy, instance.proxy);
+
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
       }
