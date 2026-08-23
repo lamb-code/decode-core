@@ -115,10 +115,13 @@ export function createRenderer(renderOptions) {
         instance.subTree = subTree;
       }
     };
+    const effect = new ReactiveEffect(componentUpdateFn, () =>
+      queueJob(update)
+    );
+
     const update = (instance.update = () => {
       effect.run();
     });
-    const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(update));
     update();
   };
   const processComponent = (n1, n2, container, anchor) => {
