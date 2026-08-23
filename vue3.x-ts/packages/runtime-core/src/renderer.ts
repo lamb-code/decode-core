@@ -4,6 +4,7 @@ import getSequence from "./seq";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { createComponentInstance, setupComponent } from "./component";
+import { invokeArray } from "./apiLifecycle";
 
 /**
  * createRenderer 【渲染器工厂函数】
@@ -101,22 +102,37 @@ export function createRenderer(renderOptions) {
   const setupRenderEffect = (instance, container, anchor) => {
     const { render } = instance;
     const componentUpdateFn = () => {
+      const { bm, m } = instance;
       //我们要在这区分是第一次还是之后的所以用到实例
       if (!instance.isMounted) {
+        //beforeMounted
+        if (bm) {
+          invokeArray(bm);
+        }
         // const subTree = render.call(state, state);
         const subTree = render.call(instance.proxy, instance.proxy);
         instance.subTree = subTree;
         patch(null, subTree, container, anchor);
         instance.isMounted = true;
+        // 加载完成 onMounted
+        if (m) {
+          invokeArray(m);
+        }
       } else {
         // const subTree = render.call(state, state);
-        const { next } = instance;
+        const { next, bu, u } = instance;
         if (next) {
           updateComponentPreRender(instance, next);
+        }
+        if (bu) {
+          invokeArray(bu);
         }
         const subTree = render.call(instance.proxy, instance.proxy);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
+        if (u) {
+          invokeArray(u);
+        }
       }
     };
     const effect = new ReactiveEffect(componentUpdateFn, () =>

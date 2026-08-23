@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div id="root"></div>
+  <script type="module">
+    // 原生的
+    // import {
+    //   createRenderer,
+    //   render,
+    //   h,
+    //   Text,
+    //   ref,
+    //   Fragment,
+    //   onBeforeMount,
+    //   onMounted,
+    //   onBeforeUpdate,
+    //   onUpdated,
+    //   getCurrentInstance 
+    // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+    import {
+      render, 
+      h, 
+      ref,
+      Text, 
+      Fragment, 
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance
+    } from "../dist/runtime-dom.js";
+    const ChildComponent = {
+      props: {
+        value: String,
+      },
+      setup(props, { emit, attrs, expose, slots }) {
+        console.log(getCurrentInstance(),'child')
+        console.log("child setup");
+        onBeforeMount(() => {
+          console.log("child onBeforeMount");
+          console.log(getCurrentInstance(),'child onBeforeMount')
+        });
+        onMounted(() => {
+          console.log("child  onMounted");
+          console.log(getCurrentInstance(),'child onMounted')
+
+        });
+        onBeforeUpdate(() => {
+          console.log("child onBeforeUpdate");
+        });
+        onUpdated(() => {
+          console.log("child onUpdated");
+        });
+
+        return () => {
+          return h("div", props.value);
+        };
+      },
+    };
+    const VueComponent = {
+      setup(props, { emit, attrs, expose, slots }) {
+        console.log("parent setup");
+        console.log(getCurrentInstance(),'parent')
+
+        onBeforeMount(() => {
+          console.log("parent onBeforeMount");
+        });
+        onMounted(() => {
+          console.log("parent onMounted");
+        });
+        onBeforeUpdate(() => {
+          console.log("parent onBeforeUpdate");
+        });
+        onUpdated(() => {
+          console.log("parent onUpdated");
+        });
+        const val = ref("a");
+        // setTimeout(() => {
+        //   val.value = "b";
+        // }, 1000);
+        return () => {
+          return h(ChildComponent, { value: val.value });
+        };
+      },
+    };
+    render(h(VueComponent), app);
+  </script>
+</body>
+
+</html>

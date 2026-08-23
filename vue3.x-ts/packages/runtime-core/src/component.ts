@@ -6,7 +6,7 @@ export function createComponentInstance(vnode) {
     data: null,
     vnode,
     subTree: null,
-    isMounted: true,
+    isMounted: false,
     update: null,
     props: {},
     attrs: {},
@@ -100,7 +100,9 @@ export function setupComponent(instance) {
         handler && handler(...payload);
       },
     };
+    setCurrentInstance(instance)
     const setupResult = setup(instance.props, setupContext);
+    unsetCurrentInstance()
     if (isFunction(setupResult)) {
       instance.render = setupResult;
     } else {
@@ -114,4 +116,15 @@ export function setupComponent(instance) {
     instance.render = render;
   }
   //instance.render = render;
+}
+
+export let currentInstance =null;
+export const getCurrentInstance=()=>{
+  return currentInstance
+}
+export const setCurrentInstance=(instance)=>{
+  currentInstance = instance
+}
+export const unsetCurrentInstance=()=>{
+  currentInstance = null;
 }
