@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module">
+    // 原生的
+    // import {
+    //   createRenderer,
+    //   render,
+    //   h,
+    //   Text,
+    //   Fragment,
+    // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+
+    import { render, h, Text, Fragment,ref } from "../dist/runtime-dom.js";
+    //setup 函数 每个组件只会执行一次 可以放入我们的compositionApi reactive ref
+    // 解决反复横跳的问题 computed watch
+    // steup可以返回render 函数
+
+    const VueComponent = {
+      props: {},
+      // data() {
+      //   return { flag: true, address: "bj" };
+      // },
+      setup(props,{emit,attrs,expose,slots}) {
+        // console.log()
+        const a = ref(1)
+        // 可以返回一个对象也可以返回函数；返回对象就作为这个组件的状态 返回函数就是这个组件的渲染函数
+        // return {
+        //   a:a.value
+        // }
+        return ()=>{
+          return    h('div',a.value)
+        }
+      },
+      render(proxy){
+        return   h('div',proxy.a)
+      }
+    };
+
+    render(h(VueComponent), app);
+  </script>
+</body>
+
+</html>
