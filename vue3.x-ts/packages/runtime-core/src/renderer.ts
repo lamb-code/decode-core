@@ -107,13 +107,14 @@ export function createRenderer(renderOptions) {
     instance.next = null;
     instance.vnode = next;
     updateProps(instance, instance.props, next.props);
+    Object.assign(instance.slots,next.children)
   };
   const renderComponent = (instance) => {
-    const { render, vnode, proxy, props, attrs } = instance;
+    const { render, vnode, proxy, props, attrs,slots } = instance;
     if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
       return render.call(proxy, proxy);
     } else {
-      return vnode.type(attrs);
+      return vnode.type(attrs,{slots});
     }
   };
   const setupRenderEffect = (instance, container, anchor, parentComponent) => {
