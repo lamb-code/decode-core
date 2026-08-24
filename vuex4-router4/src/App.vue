@@ -2,11 +2,12 @@
   <nav>
    
     <div>计数器: {{ $store.state.count }}{{ count }} <button @click="$store.state.count++">错误修改</button></div>
-    <!-- <div>{{ double }}</div> -->
+
+    <div>计算属性:{{ double }}</div>
     <!-- 错误写法  严格模式下就会报错 -->
     
-    <!-- <button @click="add">同步修改</button>
-    <button @click="asyncAdd">异步修改</button> -->
+    <button @click="add">同步修改</button>
+    <button @click="asyncAdd">异步修改</button>
 
     <!-- <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link> -->
