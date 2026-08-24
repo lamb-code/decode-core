@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <style>
+      .x-enter-active,
+      .x-leave-active {
+        transition: opacity 3s ease;
+      }
+      .x-enter-from,
+      .x-leave-to {
+        opacity: 0;
+      }
+    </style>
+    <script type="module">
+      // 原生的
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   Teleport,
+      //   Transition
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      import {
+        render,
+        h,
+        Text,
+        Fragment,
+        Teleport,
+        Transition,
+      } from "../dist/runtime-dom.js";
+
+      const props = {
+        name: "x",
+        onBeforeEnter(el) {
+          console.log(arguments, "beforeenter");
+        },
+        onEnter(el) {
+          console.log(arguments, "enter");
+        },
+        onLeave(el) {
+          console.log(arguments, "leave");
+        },
+      };
+      render(
+        h(Transition, props, {
+          a: 1,
+          default: () => {
+            return h("div", {
+              style: { width: "100px", height: "100px", background: "red" },
+            });
+          },
+        }),
+        app
+      );
+      setTimeout(() => {
+        render(
+          h(Transition, props, {
+            b: 2,
+            default: () => {
+              return h("p", {
+                style: { width: "100px", height: "100px", background: "blue" },
+              });
+            },
+          }),
+          app
+        );
+      }, 2000);
+    </script>
+  </body>
+</html>

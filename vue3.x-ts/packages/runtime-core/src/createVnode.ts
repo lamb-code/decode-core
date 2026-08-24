@@ -1,5 +1,5 @@
 import { ShapeFlags, isString, isObject, isFunction } from "@vue/shared";
-import { isTeleport } from "./teleport";
+import { isTeleport } from "./components/Teleport";
 export const Text = Symbol("Text");
 export const Fragment = Symbol("Fragment");
 export function isVnode(value) {

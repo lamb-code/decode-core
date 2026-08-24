@@ -58,7 +58,7 @@ export function createRenderer(renderOptions) {
    * 仅在首次渲染(n1===null)时调用，更新阶段不走这里，走diff对比逻辑
    */
   const mountElement = (vnode, container, anchor, parentComponent) => {
-    const { type, children, props, shapeFlag } = vnode;
+    const { type, children, props, shapeFlag,transition } = vnode;
     //第一次渲染的时候让虚拟节点和真实DOM创建关联，第二次渲染新的vnodek可以和上一次的vnode做比对，之后更新对应的el元素 可以后续复用这个dom元素
     let el = (vnode.el = hostCreateElement(type));
     if (props) {
@@ -72,7 +72,13 @@ export function createRenderer(renderOptions) {
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren(children, el, parentComponent);
     }
+    if(transition){
+      transition.beforeEnter(el)
+    }
     hostInsert(el, container, anchor);
+    if(transition){
+      transition.enter(el)
+    }
   };
   const processElement = (n1, n2, container, anchor, parentComponent) => {
     if (n1 == null) {
@@ -543,7 +549,8 @@ export function createRenderer(renderOptions) {
     }
   }
   const unmount = (vnode) => {
-    const { shapeFlag } = vnode;
+    const { shapeFlag,transition } = vnode;
+    const performRemove=()=>hostRemove(vnode.el);
     if (vnode.type == Fragment) {
       unmountChildren(vnode.children);
     } else if (shapeFlag & ShapeFlags.COMPONENT) {
@@ -552,7 +559,12 @@ export function createRenderer(renderOptions) {
       vnode.type.remove(vnode,unmountChildren)
     }
     else {
-      hostRemove(vnode.el);
+      if(transition){
+        transition.leave(vnode.el,performRemove)
+      }else{
+        performRemove()
+      }
+      // hostRemove(vnode.el);
     }
   };
   //多次调用render 会进行虚拟节点比较 在进行更新
