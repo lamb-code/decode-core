@@ -8,6 +8,8 @@ function getNestedState(state, path) {
 }
 function installModule(store, rootState, path, module) {
   let isRoot = !path.length; // 如果数组是空说明是根否则不是
+  const namespaced = store._modules.getNamespaced(path)
+  console.log(namespaced,'namespaced')
   if (!isRoot) {
     let parentState = path
       .slice(0, -1)
@@ -17,20 +19,20 @@ function installModule(store, rootState, path, module) {
 
   //getters
   module.forEachGetter((getter, key) => {
-    store._wrappedGetters[key] = () => {
+    store._wrappedGetters[namespaced+key] = () => {
       // return getter(module.state) //如果直接使用模块上的状态，此状态不是响应式的
       return getter(getNestedState(store.state, path));
     };
   });
   module.forEachMutation((mutation, key) => {
-    const entry = store._mutations[key] || (store._mutations[key] = []);
+    const entry = store._mutations[namespaced+key] || (store._mutations[namespaced+key] = []);
     entry.push((payload) => {
       mutation.call(store, getNestedState(store.state, path), payload);
     });
   });
   // mutation和action区别，action执行后返回一个promise
   module.forEachAction((action, key) => {
-    const entry = store._actions[key] || (store._actions[key] = []);
+    const entry = store._actions[namespaced+key] || (store._actions[namespaced+key] = []);
     entry.push((payload) => {
       let res = action.call(store, store, payload);
       if (!isPromise(res)) {

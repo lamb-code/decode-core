@@ -30,12 +30,19 @@ export default class ModuleCollection {
         // 调用模块身上的 getChild 方法，取出名为 current 的子模块
         return module.getChild(current);
       }, this.root); // reduce初始值：查找的起点永远是根模块
-      parent.addChild(path[path.length-1],newModule)
+      parent.addChild(path[path.length - 1], newModule);
     }
     if (rawModule.modules) {
       forEachValue(rawModule.modules, (rawChildModule, key) => {
         this.register(rawChildModule, path.concat(key));
       });
     }
+  }
+  getNamespaced(path) {
+    let module = this.root;
+    return path.reduce((namespacedStr, key) => {
+        module = module.getChild(key); //子模块
+      return namespacedStr + (module.namespaced ? key + "/" : "");
+    }, "");
   }
 }
