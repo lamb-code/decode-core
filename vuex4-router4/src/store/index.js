@@ -1,6 +1,7 @@
 import { createStore } from "@/vuex";
 
 export default createStore({
+  strict:true,
   state: {
     //组件的data
     count: 0,

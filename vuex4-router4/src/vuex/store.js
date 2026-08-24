@@ -1,15 +1,16 @@
-import { reactive } from "vue";
+import { reactive, watch } from "vue";
 import { forEachValue, isPromise } from "./utils";
 import { storeKey } from "./injectKey";
 import ModuleCollection from "./module/module-collection";
+import store from "@/store";
 function getNestedState(state, path) {
   //根据路径获取store.上面最新的状态
   return path.reduce((moduleState, key) => moduleState[key], state);
 }
 function installModule(store, rootState, path, module) {
   let isRoot = !path.length; // 如果数组是空说明是根否则不是
-  const namespaced = store._modules.getNamespaced(path)
-  console.log(namespaced,'namespaced')
+  const namespaced = store._modules.getNamespaced(path);
+  console.log(namespaced, "namespaced");
   if (!isRoot) {
     let parentState = path
       .slice(0, -1)
@@ -19,20 +20,24 @@ function installModule(store, rootState, path, module) {
 
   //getters
   module.forEachGetter((getter, key) => {
-    store._wrappedGetters[namespaced+key] = () => {
+    store._wrappedGetters[namespaced + key] = () => {
       // return getter(module.state) //如果直接使用模块上的状态，此状态不是响应式的
       return getter(getNestedState(store.state, path));
     };
   });
   module.forEachMutation((mutation, key) => {
-    const entry = store._mutations[namespaced+key] || (store._mutations[namespaced+key] = []);
+    const entry =
+      store._mutations[namespaced + key] ||
+      (store._mutations[namespaced + key] = []);
     entry.push((payload) => {
       mutation.call(store, getNestedState(store.state, path), payload);
     });
   });
   // mutation和action区别，action执行后返回一个promise
   module.forEachAction((action, key) => {
-    const entry = store._actions[namespaced+key] || (store._actions[namespaced+key] = []);
+    const entry =
+      store._actions[namespaced + key] ||
+      (store._actions[namespaced + key] = []);
     entry.push((payload) => {
       let res = action.call(store, store, payload);
       if (!isPromise(res)) {
@@ -56,6 +61,18 @@ function resetStoreState(store, state) {
       enumerable: true,
     });
   });
+  if (store.strict) {
+    enableStrictMode(store);
+  }
+}
+function enableStrictMode(store) {
+  watch(
+    () => store._state.data,
+    () => {
+        console.assert(store._commiting,'不能异步修改数据...')
+    },
+    { deep: true, flush: "sync" }
+  );
 }
 export default class Store {
   constructor(options) {
@@ -65,6 +82,8 @@ export default class Store {
     store._wrappedGetters = Object.create(null);
     store._mutations = Object.create(null);
     store._actions = Object.create(null);
+    this.strict = options.strict || false;
+    this._commiting = false;
 
     //定义状态
     const state = store._modules.root.state;
@@ -72,10 +91,20 @@ export default class Store {
     installModule(store, state, [], store._modules.root);
     resetStoreState(store, state);
   }
+  _withCommiting(fn) {
+    const commiting = this._commiting;
+    this._commiting = true;
+    fn();
+    this._commiting = commiting;
+  }
   //为什么必须箭头函数写法？
   commit = (type, payload) => {
     const entry = this._mutations[type] || [];
-    entry.forEach((handler) => handler(payload));
+
+    // entry.forEach((handler) => handler(payload));
+    this._withCommiting(() => {
+      entry.forEach((handler) => handler(payload));
+    });
   };
   dispatch = (type, payload) => {
     const entry = this._actions[type] || [];
