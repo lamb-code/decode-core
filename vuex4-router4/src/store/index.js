@@ -20,9 +20,12 @@ export default createStore({
   actions: {
     // 可以调用其他action 或者调用mutation
     asyncAdd({ commit }, payload) {
-      setTimeout(() => {
-        commit("add", payload);
-      },1000);
+      return new Promise((resolve,reject)=>{
+        setTimeout(() => {
+          commit("add", payload);
+          resolve()
+        },1000);
+      })
     },
   },
   modules: {

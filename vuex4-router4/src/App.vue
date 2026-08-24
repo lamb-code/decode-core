@@ -27,7 +27,9 @@ export default {
       store.commit('add',1)
     }
     function asyncAdd(){
-      store.dispatch('asyncAdd',1)
+      store.dispatch('asyncAdd',1).then(()=>{
+        alert('ok')
+      })
     }
     return {
       count:computed(()=>store.state.count),
