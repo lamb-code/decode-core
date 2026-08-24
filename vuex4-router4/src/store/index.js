@@ -1,7 +1,16 @@
 import { createStore } from "@/vuex";
-
+function persists(store) {
+  let local= localStorage.getItem('vuex')
+  if(local){
+    store.replaceState(JSON.parse(local))
+  }
+  store.subscribe((mutation, state) => {
+    localStorage.setItem("vuex", JSON.stringify(state));
+  });
+}
 export default createStore({
-  strict:true,
+  strict: true,
+  plugins: [persists],
   state: {
     //组件的data
     count: 0,

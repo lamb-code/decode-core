@@ -2,7 +2,6 @@ import { reactive, watch } from "vue";
 import { forEachValue, isPromise } from "./utils";
 import { storeKey } from "./injectKey";
 import ModuleCollection from "./module/module-collection";
-import store from "@/store";
 function getNestedState(state, path) {
   //根据路径获取store.上面最新的状态
   return path.reduce((moduleState, key) => moduleState[key], state);
@@ -69,7 +68,7 @@ function enableStrictMode(store) {
   watch(
     () => store._state.data,
     () => {
-        console.assert(store._commiting,'不能异步修改数据...')
+      console.assert(store._commiting, "不能异步修改数据...");
     },
     { deep: true, flush: "sync" }
   );
@@ -90,6 +89,8 @@ export default class Store {
     //把状态定义到store.state,安装模块
     installModule(store, state, [], store._modules.root);
     resetStoreState(store, state);
+    store._subscribes = [];
+    options.plugins && options.plugins.forEach((plugin) => plugin(store));
   }
   _withCommiting(fn) {
     const commiting = this._commiting;
@@ -97,6 +98,16 @@ export default class Store {
     fn();
     this._commiting = commiting;
   }
+  replaceState = (newState) => {
+    //严格模式不能直接更改状态
+    // this._state.data=newState
+    this._withCommiting(() => {
+      this._state.data = newState;
+    });
+  };
+  subscribe = (fn) => {
+    this._subscribes.push(fn);
+  };
   //为什么必须箭头函数写法？
   commit = (type, payload) => {
     const entry = this._mutations[type] || [];
@@ -105,6 +116,7 @@ export default class Store {
     this._withCommiting(() => {
       entry.forEach((handler) => handler(payload));
     });
+    this._subscribes.forEach((sub) => sub({ type, payload }, this.state));
   };
   dispatch = (type, payload) => {
     const entry = this._actions[type] || [];
