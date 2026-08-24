@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <div id="root"></div>
+    <script type="module">
+      // 原生的;
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   ref,
+      //   Fragment,
+      //   onBeforeMount,
+      //   onMounted,
+      //   onBeforeUpdate,
+      //   onUpdated,
+      //   getCurrentInstance,
+      //   provide,
+      //   inject,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      import {
+        render,
+        h,
+        ref,
+        Text,
+        Fragment,
+        onBeforeMount,
+        onMounted,
+        onBeforeUpdate,
+        onUpdated,
+        getCurrentInstance,
+        provide,
+        inject
+      } from "../dist/runtime-dom.js";
+
+      function functionalComp(props) {
+        return h("div", props.a + props.b);
+      }
+      const Child = {
+        setup(props) {
+          const name = inject("name");
+          const age = inject("age", 30);
+          return () => {
+            return h("div", [name.value, age]);
+          };
+        },
+      };
+      const Parent = {
+        setup(props) {
+          return () => {
+            return h(Child);
+          };
+        },
+      };
+      const Root = {
+        setup(props) {
+          const name = ref("jw");
+          provide("name", name);
+          setTimeout(()=>{
+            name.value ='jt'
+          },1000)
+          return () => {
+            return h(Parent);
+          };
+        },
+      };
+      //在父组件中提供数据，后代组件获取数据
+      render(h(Root), app);
+    </script>
+  </body>
+</html>
