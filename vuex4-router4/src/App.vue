@@ -8,7 +8,8 @@
     
     <button @click="add">同步修改</button>
     <button @click="asyncAdd">异步修改</button>
-
+    <div>a模块:{{ aCount }}<button @click="$store.commit('aCount/add',1)">同步修改a</button></div>
+    <div>b模块:{{ bCount }}</div>
     <!-- <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link> -->
     
@@ -31,6 +32,9 @@ export default {
     return {
       count:computed(()=>store.state.count),
       double:computed(()=>store.getters.double),
+      aCount:computed(()=>store.state.aCount.count),
+      bCount:computed(()=>store.state.bCount.count),
+
       add,
       asyncAdd
     }

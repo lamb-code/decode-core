@@ -25,5 +25,25 @@ export default createStore({
       },1000);
     },
   },
-  modules: {},
+  modules: {
+    aCount:{
+      namespaced:true,
+      state:{count:0},
+      mutations: {
+        //可以更改状态 必须是同步更改的
+        add(state, payload) {
+          state.count += payload;
+        },
+      },
+    },
+    bCount:{
+      state:{count:0},
+      mutations: {
+        //可以更改状态 必须是同步更改的
+        add(state, payload) {
+          state.count += payload;
+        },
+      },
+    }
+  },
 });
