@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <style>
+      .x-enter-active,
+      .x-leave-active {
+        transition: opacity 3s ease;
+      }
+
+      .x-enter-from,
+      .x-leave-to {
+        opacity: 0;
+      }
+    </style>
+    <script type="module">
+      // 原生的
+      // import {
+      //   createRenderer,
+      //   render,
+      //   h,
+      //   Text,
+      //   Fragment,
+      //   Teleport,
+      //   Transition,
+      //   onMounted,
+      //   KeepAlive,
+      // } from "/node_modules/vue/dist/vue.runtime.esm-browser.js";
+      import {
+        render,
+        h,
+        Text,
+        Fragment,
+        Teleport,
+        Transition,
+        onMounted,
+        KeepAlive 
+      } from "../dist/runtime-dom.js";
+      // 特点
+      //1.组件不会被重新渲染，会将上次的结果拿出来返回
+      //2.组件不会被卸载而是将dom移除掉
+      //3.内部需要缓存DOM
+
+      const A1 = {
+        setup(props) {
+          onMounted(() => {
+            console.log("a1 mounted");
+          });
+          return () => {
+            return h("h1", "a1");
+          };
+        },
+      };
+      const A2 = {
+        setup(props) {
+          onMounted(() => {
+            console.log("a2 mounted");
+          });
+          return () => {
+            return h("h1", "a2");
+          };
+        },
+      };
+      const A3 = {
+        setup(props) {
+          onMounted(() => {
+            console.log("a3 mounted");
+          });
+          return () => {
+            return h("h1", "a3");
+          };
+        },
+      };
+      render(
+        h(KeepAlive, null, {
+          default: () => h(A1),
+        }),
+        app
+      );
+      setTimeout(() => {
+        render(
+          h(KeepAlive, null, {
+            default: () => h(A2),
+          }),
+          app
+        );
+      }, 1000);
+      setTimeout(() => {
+        render(
+          h(KeepAlive, null, {
+            default: () => h(A1),
+          }),
+          app
+        );
+      }, 1000);
+    </script>
+  </body>
+</html>

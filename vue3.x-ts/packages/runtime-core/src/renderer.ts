@@ -5,6 +5,7 @@ import { isRef, reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { createComponentInstance, setupComponent } from "./component";
 import { invokeArray } from "./apiLifecycle";
+import { isKeepAlive } from "./components/KeepAlive";
 
 /**
  * createRenderer 【渲染器工厂函数】
@@ -58,7 +59,7 @@ export function createRenderer(renderOptions) {
    * 仅在首次渲染(n1===null)时调用，更新阶段不走这里，走diff对比逻辑
    */
   const mountElement = (vnode, container, anchor, parentComponent) => {
-    const { type, children, props, shapeFlag,transition } = vnode;
+    const { type, children, props, shapeFlag, transition } = vnode;
     //第一次渲染的时候让虚拟节点和真实DOM创建关联，第二次渲染新的vnodek可以和上一次的vnode做比对，之后更新对应的el元素 可以后续复用这个dom元素
     let el = (vnode.el = hostCreateElement(type));
     if (props) {
@@ -72,12 +73,12 @@ export function createRenderer(renderOptions) {
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren(children, el, parentComponent);
     }
-    if(transition){
-      transition.beforeEnter(el)
+    if (transition) {
+      transition.beforeEnter(el);
     }
     hostInsert(el, container, anchor);
-    if(transition){
-      transition.enter(el)
+    if (transition) {
+      transition.enter(el);
     }
   };
   const processElement = (n1, n2, container, anchor, parentComponent) => {
@@ -113,14 +114,14 @@ export function createRenderer(renderOptions) {
     instance.next = null;
     instance.vnode = next;
     updateProps(instance, instance.props, next.props);
-    Object.assign(instance.slots,next.children)
+    Object.assign(instance.slots, next.children);
   };
   const renderComponent = (instance) => {
-    const { render, vnode, proxy, props, attrs,slots } = instance;
+    const { render, vnode, proxy, props, attrs, slots } = instance;
     if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
       return render.call(proxy, proxy);
     } else {
-      return vnode.type(attrs,{slots});
+      return vnode.type(attrs, { slots });
     }
   };
   const setupRenderEffect = (instance, container, anchor, parentComponent) => {
@@ -176,6 +177,16 @@ export function createRenderer(renderOptions) {
       vnode,
       parentComponent
     ));
+    if (isKeepAlive(vnode)) {
+      instance.ctx.renderer = {
+        createElement: hostCreateElement, //内部需要创建一个div缓存dom
+        move(vnode, container, anchor) {
+          //需要把之前的dom放入到容器中
+          hostInsert(vnode.component.subTree.el, container, anchor);
+        },
+        unmount, //如果组件切换需要将现在容易中的元素移除
+      };
+    }
 
     //第二步给实例属性赋值
     setupComponent(instance);
@@ -272,7 +283,7 @@ export function createRenderer(renderOptions) {
     return false;
   };
   const updateProps = (instance, prevProps, nextProps) => {
-    if (hasPropsChange(prevProps, nextProps)) {
+    if (hasPropsChange(prevProps, nextProps || {})) {
       for (let key in nextProps) {
         instance.props[key] = nextProps[key];
       }
@@ -288,7 +299,7 @@ export function createRenderer(renderOptions) {
     const { props: nextProps, children: nextChildren } = n2;
     if (prevChildren || nextChildren) return true; //有插槽直接走重新渲染即可
     if (prevProps === nextProps) return false;
-    return hasPropsChange(prevProps, nextProps);
+    return hasPropsChange(prevProps, nextProps || {});
   };
   const updateComponent = (n1, n2) => {
     const instance = (n2.component = n1.component); //复用组件实例
@@ -302,7 +313,12 @@ export function createRenderer(renderOptions) {
   };
   const processComponent = (n1, n2, container, anchor, parentComponent) => {
     if (n1 === null) {
-      mountComponent(n2, container, anchor, parentComponent);
+      if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        //需要走keepalive中的激活方法
+        parentComponent.ctx.activated(n2,container,anchor)
+      } else {
+        mountComponent(n2, container, anchor, parentComponent);
+      }
     } else {
       //组件的更新
       updateComponent(n1, n2);
@@ -549,20 +565,19 @@ export function createRenderer(renderOptions) {
     }
   }
   const unmount = (vnode) => {
-    const { shapeFlag,transition } = vnode;
-    const performRemove=()=>hostRemove(vnode.el);
+    const { shapeFlag, transition } = vnode;
+    const performRemove = () => hostRemove(vnode.el);
     if (vnode.type == Fragment) {
       unmountChildren(vnode.children);
     } else if (shapeFlag & ShapeFlags.COMPONENT) {
       unmount(vnode.component.subTree);
-    } else if(shapeFlag&ShapeFlags.TELEPORT){
-      vnode.type.remove(vnode,unmountChildren)
-    }
-    else {
-      if(transition){
-        transition.leave(vnode.el,performRemove)
-      }else{
-        performRemove()
+    } else if (shapeFlag & ShapeFlags.TELEPORT) {
+      vnode.type.remove(vnode, unmountChildren);
+    } else {
+      if (transition) {
+        transition.leave(vnode.el, performRemove);
+      } else {
+        performRemove();
       }
       // hostRemove(vnode.el);
     }
