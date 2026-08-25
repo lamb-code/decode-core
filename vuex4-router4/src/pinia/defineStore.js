@@ -105,7 +105,7 @@ function createSetupStore(id, setup, pinia) {
       mergeReactiveObject(store, args);
     }
   }
-  const actionSubscribes = [];
+  let actionSubscribes = [];
   const partialStore = {
     $patch,
     $subscribe(callback, options) {
@@ -120,10 +120,20 @@ function createSetupStore(id, setup, pinia) {
       );
     },
     $onAction: addSubcription.bind(null, actionSubscribes),
+    $dispose: () => {
+      scope.stop();
+      actionSubscribes = [];
+      pinia._s.delete(id);
+    },
   };
   const store = reactive(partialStore);
+  Object.defineProperty(store, "$state", {
+    get: () => pinia.state.value[id],
+    set: (state) => this.$patch(($state) => Object.assign($state, state)),
+  });
   //最终会将处理好的setupStore放到store身上
   Object.assign(store, setupStore);
+  pinia._p.forEach(plugin=>Object.assign(store,plugin({store,pinia,app:pinia._a})))
   pinia._s.set(id, store);
   return store;
 }

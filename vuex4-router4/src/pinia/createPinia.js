@@ -4,6 +4,7 @@ import { SymbolPinia } from "./rootState";
 export function createPinia(){
     const scope = effectScope(true)
     const state= scope.run(()=>ref({}))//run方法的返回值就是这个fn的返回结果
+    const _p=[]
     const pinia =markRaw({
         install(app){
             //希望pinia共享出去
@@ -12,7 +13,13 @@ export function createPinia(){
             app.config.globalProperties.$pinia=pinia
             app._a=app
         },
+        use(plugin){
+            _p.push(plugin)
+            return this
+        },
+        _p,
         state,//所有的状态
+        _a:null,
         _e:scope,//用来管理这个应用的整个effecScope
         _s:new Map() //记录所有的store
     })
