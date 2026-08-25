@@ -1,4 +1,11 @@
-import { effectScope, getCurrentInstance, inject, reactive } from "vue";
+import {
+  computed,
+  effectScope,
+  getCurrentInstance,
+  inject,
+  reactive,
+  toRefs,
+} from "vue";
 import { SymbolPinia } from "./rootState";
 
 export function defineStore(idOrOptions, setup) {
@@ -18,19 +25,30 @@ export function defineStore(idOrOptions, setup) {
     if (!pinia._s.has(id)) {
       createOptionsStore(id, options, pinia);
     }
-    const store = pinia._s.get(id)
-    return store
+    const store = pinia._s.get(id);
+    return store;
   }
   return useStore;
 }
 function createOptionsStore(id, options, pinia) {
   let { state, getters, actions } = options;
   let scope;
-  const store = reactive({})
+  const store = reactive({}); //每一个stored都是一个响应式对象
   function setup() {
     pinia.state.value[id] = state ? state() : {};
-    const localState = pinia.state.value[id]
-    return localState
+    // const localState = pinia.state.value[id];
+    const localState = toRefs(pinia.state.value[id]);
+
+    return Object.assign(
+      localState,
+      actions,
+      Object.keys(getters || {}).reduce((computedGetter, key) => {
+        computedGetter[key] = computed(() => {
+          return getters[key].call(store,store); //这返回的是普通值不具响应式 需要把localstate toRefs包裹下
+        });
+        return computedGetter
+      }, {})
+    );
   }
   //_e能停止所有的store
   //每个store还能停止自己的
@@ -38,8 +56,21 @@ function createOptionsStore(id, options, pinia) {
     scope = effectScope();
     return scope.run(() => setup());
   });
-
-  Object.assign(store,setupStore)
-  pinia._s.set(id,store)
-  console.log(store)
+  function wrapAction(key, action) {
+    return function () {
+      //触发action的时候，可以触发一些额外的逻辑
+      let res = action.apply(store, arguments);
+      return res;
+    };
+  }
+  for (let key in setupStore) {
+    let prop = setupStore[key];
+    if (typeof prop === "function") {
+      setupStore[key] = wrapAction(key, prop);
+    }
+  }
+  //最终会将处理好的setupStore放到store身上
+  Object.assign(store, setupStore);
+  pinia._s.set(id, store);
+  console.log(store);
 }

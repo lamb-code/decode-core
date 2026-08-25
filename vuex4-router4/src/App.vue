@@ -19,7 +19,8 @@ export default {
     const counterStore = useCounterStore();
     console.log(counterStore);
     const handlerClick = ()=>{
-      counterStore.count++
+      // counterStore.count++
+      counterStore.increment()
     }
 
     return {
