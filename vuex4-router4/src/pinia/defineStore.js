@@ -8,8 +8,9 @@ import {
   toRefs,
   watch,
 } from "vue";
-import { SymbolPinia } from "./rootState";
+import { SymbolPinia, activedPinia } from "./rootState";
 import { addSubcription, triggerSubscription } from "./pubSub";
+import { setActivePinia } from "./rootState";
 function mergeReactiveObject(target, source) {
   for (let key in source) {
     if (!source.hasOwnProperty(key)) continue;
@@ -37,8 +38,10 @@ export function defineStore(idOrOptions, setup) {
   const isSetupStore = typeof setup === "function";
   function useStore() {
     const currentInstance = getCurrentInstance();
-    const pinia = currentInstance && inject(SymbolPinia); //必须在组件里才能使用
+    let pinia = currentInstance && inject(SymbolPinia); //必须在组件里才能使用
     console.log(pinia);
+    if(pinia) setActivePinia(pinia)
+        pinia=activedPinia
     if (!pinia._s.has(id)) {
       if (isSetupStore) {
       } else {
