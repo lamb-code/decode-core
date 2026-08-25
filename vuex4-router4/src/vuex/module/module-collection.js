@@ -7,6 +7,7 @@ export default class ModuleCollection {
   }
   register(rawModule, path) {
     const newModule = new Module(rawModule);
+    // rawModule.newModule = newModule
     if (path.length == 0) {
       //path.length ==0是 根模块
       this.root = newModule;
@@ -37,6 +38,7 @@ export default class ModuleCollection {
         this.register(rawChildModule, path.concat(key));
       });
     }
+    return newModule
   }
   getNamespaced(path) {
     let module = this.root;

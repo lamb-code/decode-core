@@ -14,7 +14,10 @@ function installModule(store, rootState, path, module) {
     let parentState = path
       .slice(0, -1)
       .reduce((state, key) => state[key], rootState);
-    parentState[path[path.length - 1]] = module.state;
+    // parentState[path[path.length - 1]] = module.state; //后续新增模块强制赋值会报警告错误
+    store._withCommiting(()=>{
+      parentState[path[path.length - 1]] = module.state;
+    })
   }
 
   //getters
@@ -128,5 +131,15 @@ export default class Store {
   install(app, injectKey) {
     app.provide(injectKey || storeKey, this); //给根组件app 增加一个_provides，子组件会去向上查找
     app.config.globalProperties.$store = this; //增加$store属性
+  }
+  registerModule(path, rawModule) {
+    const store = this;
+    if (typeof path === "string") {
+      path = [path];
+    }
+    //流程:在原有的模块基础上新增一个;再把模块安装上;最后重置容器
+    const newModule= store._modules.register(rawModule, path);
+    //installModule 怎么拿到转化后的module？
+    installModule(store, store.state, path,newModule);
   }
 }

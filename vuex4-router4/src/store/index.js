@@ -1,14 +1,14 @@
 import { createStore } from "@/vuex";
 function persists(store) {
-  let local= localStorage.getItem('vuex')
-  if(local){
-    store.replaceState(JSON.parse(local))
+  let local = localStorage.getItem("vuex");
+  if (local) {
+    store.replaceState(JSON.parse(local));
   }
   store.subscribe((mutation, state) => {
     localStorage.setItem("vuex", JSON.stringify(state));
   });
 }
-export default createStore({
+const strore = createStore({
   strict: true,
   plugins: [persists],
   state: {
@@ -73,3 +73,15 @@ export default createStore({
     },
   },
 });
+
+strore.registerModule(["aCount", "ecount"], {
+  namespaced: true,
+  state: { count: 0 },
+  mutations: {
+    //可以更改状态 必须是同步更改的
+    add(state, payload) {
+      state.count += payload;
+    },
+  },
+});
+export default strore;
