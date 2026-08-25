@@ -3,10 +3,26 @@ import {
   effectScope,
   getCurrentInstance,
   inject,
+  isRef,
   reactive,
   toRefs,
+  watch,
 } from "vue";
 import { SymbolPinia } from "./rootState";
+import { addSubcription, triggerSubscription } from "./pubSub";
+function mergeReactiveObject(target, source) {
+  for (let key in source) {
+    if (!source.hasOwnProperty(key)) continue;
+    const oldValue = target[key];
+    const newValue = source[key];
+    if (isObject(oldValue) && isObject(newValue) && isRef(newValue)) {
+      target[key] = mergeReactiveObject(oldValue, newValue);
+    } else {
+      target[key] = newValue;
+    }
+  }
+  return target;
+}
 
 export function defineStore(idOrOptions, setup) {
   let id;
@@ -35,7 +51,6 @@ export function defineStore(idOrOptions, setup) {
   return useStore;
 }
 function createSetupStore(id, setup, pinia) {
-  const store = reactive({});
   let scope;
 
   const setupStore = pinia._e.run(() => {
@@ -45,8 +60,34 @@ function createSetupStore(id, setup, pinia) {
 
   function wrapAction(key, action) {
     return function () {
+      const afterCallbacks = [];
+      const onErrorCallbacks = [];
+      function after(callback) {
+        afterCallbacks.push(callback);
+      }
+      function onError(callback) {
+        onErrorCallbacks.push(callback);
+      }
+      triggerSubscription(actionSubscribes, { after, onError, store, key });
+      let res;
+      try {
+        res = action.apply(store, arguments);
+      } catch (error) {
+        triggerSubscription(onErrorCallbacks, error);
+      }
       //触发action的时候，可以触发一些额外的逻辑
-      let res = action.apply(store, arguments);
+      if (res instanceof Promise) {
+        return res
+          .then((value) => {
+            triggerSubscription(afterCallbacks, value);
+          })
+          .catch((error) => {
+            triggerSubscription(onErrorCallbacks, error);
+            return Promise.reject(error);
+          });
+      } else {
+        triggerSubscription(afterCallbacks, res);
+      }
       return res;
     };
   }
@@ -56,10 +97,35 @@ function createSetupStore(id, setup, pinia) {
       setupStore[key] = wrapAction(key, prop);
     }
   }
+
+  function $patch(args) {
+    if (typeof args === "function") {
+      args(store);
+    } else {
+      mergeReactiveObject(store, args);
+    }
+  }
+  const actionSubscribes = [];
+  const partialStore = {
+    $patch,
+    $subscribe(callback, options) {
+      scope.run(() =>
+        watch(
+          pinia.state.value[id],
+          (state) => {
+            callback({ type: "dirct" }, state);
+          },
+          options
+        )
+      );
+    },
+    $onAction: addSubcription.bind(null, actionSubscribes),
+  };
+  const store = reactive(partialStore);
   //最终会将处理好的setupStore放到store身上
   Object.assign(store, setupStore);
   pinia._s.set(id, store);
-  return store
+  return store;
 }
 function createOptionsStore(id, options, pinia) {
   let { state, getters, actions } = options;
@@ -81,6 +147,13 @@ function createOptionsStore(id, options, pinia) {
   }
   //_e能停止所有的store
   //每个store还能停止自己的
-  const store =  createSetupStore(id,setup,pinia)
-  return store
+  const store = createSetupStore(id, setup, pinia);
+  //$reset只能在非setupstore写法中
+  store.$reset = function () {
+    const newState = state ? state() : {};
+    store.$patch(($state) => {
+      Object.assign($state, newState);
+    });
+  };
+  return store;
 }

@@ -3,6 +3,7 @@ import { defineStore } from "@/pinia";
 export const useCounterStore = defineStore("counter", {
   state: () => ({
     count: 2,
+    fruits:['苹果','香蕉','菠萝']
   }),
   getters:{
     doubleCount:(store)=>store.count*2
