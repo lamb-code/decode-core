@@ -10,7 +10,7 @@ function persists(store) {
 }
 const strore = createStore({
   strict: true,
-  plugins: [persists],
+  plugins: [],
   state: {
     //组件的data
     count: 0,
