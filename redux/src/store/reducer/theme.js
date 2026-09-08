@@ -1,0 +1,13 @@
+import { INCREMENT_THEME, DECREMENT_THEME } from "./actionTypes";
+const initialState = { count: 0 };
+
+export default function counterReducer(state = initialState, action) {
+  switch (action.type) {
+    case INCREMENT_THEME:
+      return { count: state.count + 1 };
+    case DECREMENT_THEME:
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+}
