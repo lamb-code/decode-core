@@ -23,7 +23,6 @@ function ReactElement(type, key, ref, props) {
   };
 }
 export function jsxDEV(type, config) {
-  console.log(type,config,'0000')
   let propName;
   const props = {};
   let key = null;
