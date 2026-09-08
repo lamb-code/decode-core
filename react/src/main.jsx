@@ -4,4 +4,4 @@ let element =(<div>hello<span style={{color:'red'}}>World</span></div>)
 function App(){
     return (<div>dlfjldkf</div>)
 }
-console.log(element,'element00')
+const root = createRoot(document.getElementById('root'))
