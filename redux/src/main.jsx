@@ -7,10 +7,10 @@ const root = createRoot(document.getElementById("root"));
 
 function render() {
   root.render(
-    <>
+    <Provider store={store}>
       <Auth />
       <Theme />
-    </>
+    </Provider>
   );
 }
 render();
