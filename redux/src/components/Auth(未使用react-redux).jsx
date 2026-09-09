@@ -2,7 +2,6 @@ import React from "react";
 import store from "../store";
 import actionCreators from "../store/actionCreators/auth";
 import { bindActionCreators } from "../redux";
-
 // export default function () {
 //   const { count } = store.getState().auth;
 //   return (
@@ -19,21 +18,20 @@ import { bindActionCreators } from "../redux";
 //   );
 // }
 const bundActionCreators = bindActionCreators(actionCreators, store.dispatch);
-
 class Auth extends React.Component {
   constructor(props) {
     super(props);
     this.state = { count: store.getState().auth.count };
   }
-  componentDidMount(){
-    this.unsubscribe = store.subscribe(()=>{
-        this.setState({
-            count:store.getState().auth.count
-        })
-    })
+  componentDidMount() {
+    this.unsubscribe = store.subscribe(() => {
+      this.setState({
+        count: store.getState().auth.count,
+      });
+    });
   }
-  componentWillUnmount(){
-    this.unsubscribe()
+  componentWillUnmount() {
+    this.unsubscribe();
   }
   render() {
     return (
@@ -51,4 +49,4 @@ class Auth extends React.Component {
     );
   }
 }
-export default Auth
+export default Auth;

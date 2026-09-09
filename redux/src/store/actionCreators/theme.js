@@ -1,10 +1,10 @@
 import { DECREMENT_THEME, INCREMENT_THEME } from "../reducer/actionTypes";
 
-function increment() {
+function themeInc() {
   return { type: INCREMENT_THEME };
 }
-function decrement() {
+function themeDec() {
   return { type: DECREMENT_THEME };
 }
-const themeActionCreator ={increment,decrement}
+const themeActionCreator ={themeInc,themeDec}
 export default themeActionCreator
