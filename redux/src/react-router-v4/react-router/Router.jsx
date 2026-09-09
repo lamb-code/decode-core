@@ -7,9 +7,13 @@ export default class Router extends React.Component {
       location: props.history.location,
     };
     //当监听到路由发生变化后会执行
-    props.history.listen((location)=>{
-        this.setState({location})
-    })
+    let listener = (location) => {
+      this.setState({ location });
+    };
+    this.unlisten = props.history.listen(listener);
+  }
+  componentWillUnmount() {
+    this.unlisten();
   }
 
   render() {
