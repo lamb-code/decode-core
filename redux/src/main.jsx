@@ -3,6 +3,7 @@ import {Provider} from './react-redux'
 import store from "./store";
 import Auth from "./components/redux/Auth";
 import Theme from "./components/redux/Theme";
+import ZustandCouner from "./components/zustand/Auth";
 const root = createRoot(document.getElementById("root"));
 
 function render() {
@@ -10,6 +11,7 @@ function render() {
     <Provider store={store}>
       <Auth />
       <Theme />
+      <ZustandCouner/>
     </Provider>
   );
 }
