@@ -4,7 +4,7 @@ function bindActionCreator(actionCreator, dispatch) {
   };
 }
 function bindActionCreators(actionCreators, dispatch) {
-  const boundActionCreators = {};
+  let boundActionCreators = {};
   for (const key in actionCreators) {
     const actionCreator = actionCreators[key];
     boundActionCreators = bindActionCreator(actionCreator, dispatch);
