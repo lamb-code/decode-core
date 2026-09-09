@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手写 Redux 中间件实例 · 学习笔记</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", system-ui, sans-serif; background: #1e1e2e; color: #cdd6f4; padding: 24px; line-height: 1.7; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; color: #89b4fa; }
+  .sub { color: #a6adc8; font-size: 13px; margin-bottom: 20px; }
+  .card { background: #313244; border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; border: 1px solid #45475a; }
+  .card h2 { font-size: 15px; color: #f9e2af; margin-bottom: 12px; }
+  .state-box { font-size: 14px; }
+  .state-box b { color: #a6e3a1; font-size: 28px; margin: 0 4px; }
+  .btn { background: #89b4fa; color: #11111b; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 4px 8px 4px 0; }
+  .btn:hover { filter: brightness(1.1); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.orange { background: #fab387; }
+  .log { background: #11111b; border-radius: 8px; padding: 12px; font-family: Consolas, monospace; font-size: 12.5px; max-height: 260px; overflow-y: auto; }
+  .log .line { white-space: pre-wrap; word-break: break-all; }
+  .log .prev { color: #f38ba8; }
+  .log .act { color: #fab387; }
+  .log .next { color: #a6e3a1; }
+  .log .info { color: #89b4fa; }
+  .note { font-size: 12.5px; color: #bac2de; background: #45475a55; border-left: 3px solid #f9e2af; padding: 8px 12px; border-radius: 0 6px 6px 0; margin-top: 10px; }
+  code { background: #45475a; padding: 1px 5px; border-radius: 4px; font-family: Consolas, monospace; font-size: 12.5px; color: #f5e0dc; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>手写 Redux 中间件（Middleware）基本使用</h1>
+  <div class="sub">零依赖手写 createStore / compose / applyMiddleware + logger / thunk 中间件 · 双击此文件即可在浏览器运行</div>
+
+  <div class="card">
+    <h2>当前 state</h2>
+    <div class="state-box">
+      count = <b id="count">0</b>
+      <span id="loading" style="display:none;color:#f38ba8;font-size:13px;">（异步请求中…）</span>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn" onclick="store.dispatch({type:'INCREMENT'})">+1（同步 action）</button>
+      <button class="btn" onclick="store.dispatch({type:'DECREMENT'})">-1（同步 action）</button>
+      <button class="btn orange" id="asyncBtn" onclick="store.dispatch(asyncAdd(10))">异步 +10（thunk）</button>
+    </div>
+    <div class="note">
+      💡 每个按钮的 <code>dispatch</code> 都会先经过中间件链 <code>thunk → logger → 原始 dispatch</code>。
+      观察下方日志面板，<code>logger</code> 会打印 dispatch 前后的 state，<code>thunk</code> 会把「函数类型的 action」拦截下来执行。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>中间件日志</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="card">
+    <h2>实现源码（可直接抄进笔记）</h2>
+    <div class="log" id="source" style="height:auto;max-height:420px;"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * ① 手写 createStore —— 核心：state、dispatch、subscribe
+ * ============================================================ */
+function createStore(reducer, preloadedState, enhancer) {
+  // 兼容 createStore(reducer, enhancer) 的省略写法
+  if (typeof preloadedState === 'function' && enhancer === undefined) {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+  // 有增强器（中间件）时，把 createStore 交给它加工
+  if (enhancer) {
+    return enhancer(createStore)(reducer, preloadedState);
+  }
+
+  let state = preloadedState;          // 当前状态
+  let listeners = [];                  // 订阅者列表
+
+  function getState() { return state; }
+
+  function subscribe(listener) {
+    listeners.push(listener);
+    // 返回取消订阅函数
+    return function unsubscribe() {
+      const i = listeners.indexOf(listener);
+      if (i !== -1) listeners.splice(i, 1);
+    };
+  }
+
+  function dispatch(action) {
+    state = reducer(state, action);    // 由 reducer 计算新状态
+    listeners.slice().forEach(l => l()); // 通知所有订阅者
+    return action;
+  }
+
+  // 用占位 action 触发一次 reducer，让 state 拥有初始值
+  dispatch({ type: '@@redux/INIT' });
+
+  return { getState, subscribe, dispatch };
+}
+
+/* ============================================================
+ * ② 手写 compose —— 从右往左组合函数
+ * ============================================================ */
+function compose(...fns) {
+  if (fns.length === 0) return arg => arg;
+  if (fns.length === 1) return fns[0];
+  return fns.reduce((a, b) => (...args) => a(b(...args)));
+}
+
+/* ============================================================
+ * ③ 手写 applyMiddleware —— 中间件加工 dispatch
+ *    中间件格式：({ getState, dispatch }) => next => action => {...}
+ * ============================================================ */
+function applyMiddleware(...middlewares) {
+  return createStore => (reducer, preloadedState) => {
+    const store = createStore(reducer, preloadedState);
+
+    // 中间件 API：dispatch 用闭包变量，等链构建完成后再指向最终 dispatch
+    let dispatch = () => { throw new Error('中间件构建中，还不能 dispatch'); };
+    const middlewareAPI = {
+      getState: store.getState,
+      dispatch: action => dispatch(action)   // 让中间件内部可以再发 action
+    };
+
+    // 每一层中间件先接收 API，返回包装函数
+    const chain = middlewares.map(mw => mw(middlewareAPI));
+    // 组装成一条洋葱链：最右边的先执行
+    dispatch = compose(...chain)(store.dispatch);
+
+    return { ...store, dispatch };
+  };
+}
+
+/* ============================================================
+ * ④ 手写 logger 中间件 —— 记录 action 前后的 state
+ * ============================================================ */
+const logger = ({ getState }) => next => action => {
+  console.log('[prev state]', getState());
+  console.log('[action]', action);
+  const result = next(action);          // 传给下一层
+  console.log('[next state]', getState());
+  return result;
+};
+
+/* ============================================================
+ * ⑤ 手写 thunk 中间件 —— 支持「函数类型」的 action（异步/延迟分发）
+ * ============================================================ */
+const thunk = ({ dispatch, getState }) => next => action => {
+  if (typeof action === 'function') {
+    // action 是函数：给它 dispatch 和 getState，让它自行决定何时分发
+    return action(dispatch, getState);
+  }
+  return next(action);
+};
+
+/* ============================================================
+ * ⑥ 一个普通 reducer
+ * ============================================================ */
+function counterReducer(state = { count: 0, loading: false }, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { ...state, count: state.count + 1 };
+    case 'DECREMENT':
+      return { ...state, count: state.count - 1 };
+    case 'ASYNC_START':
+      return { ...state, loading: true };
+    case 'ASYNC_DONE':
+      return { ...state, count: state.count + action.payload, loading: false };
+    default:
+      return state;
+  }
+}
+
+/* ============================================================
+ * ⑦ 一个 thunk action creator：返回函数，模拟异步请求
+ * ============================================================ */
+function asyncAdd(n) {
+  return function (dispatch, getState) {
+    dispatch({ type: 'ASYNC_START' });          // 先标记 loading
+    setTimeout(() => {                          // 模拟网络延迟
+      dispatch({ type: 'ASYNC_DONE', payload: n });
+    }, 1500);
+  };
+}
+
+/* ============================================================
+ * ⑧ 组合：创建带中间件的 store（中间件顺序 = 洋葱外层→内层）
+ * ============================================================ */
+const store = createStore(counterReducer, applyMiddleware(thunk, logger));
+
+/* ============ 页面渲染（subscribe 订阅 state 变化） ============ */
+const countEl = document.getElementById('count');
+const loadingEl = document.getElementById('loading');
+const logEl = document.getElementById('log');
+const asyncBtn = document.getElementById('asyncBtn');
+
+function render() {
+  const s = store.getState();
+  countEl.textContent = s.count;
+  loadingEl.style.display = s.loading ? 'inline' : 'none';
+  asyncBtn.disabled = s.loading;
+}
+
+// 在页面日志面板里也镜像一份中间件日志（便于查看，不影响核心逻辑）
+function logLine(text, cls) {
+  const div = document.createElement('div');
+  div.className = 'line ' + (cls || '');
+  div.textContent = text;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+const originDispatch = store.dispatch;
+store.dispatch = (action) => {
+  if (typeof action === 'function') {
+    logLine('→ thunk 拦截：action 是函数，执行它', 'info');
+    logLine('  dispatch 前 count = ' + store.getState().count, 'prev');
+    const result = action(store.dispatch, store.getState);
+    logLine('  thunk 返回（异步中，稍后自动完成）', 'info');
+    return result;
+  }
+  logLine('prev state → ' + JSON.stringify(store.getState()), 'prev');
+  logLine('action → ' + JSON.stringify(action), 'act');
+  const result = originDispatch(action);
+  logLine('next state → ' + JSON.stringify(store.getState()), 'next');
+  logLine('----------------------------------------', '');
+  return result;
+};
+
+store.subscribe(render);
+render();
+logLine('store 创建完成，中间件顺序：thunk → logger → dispatch', 'info');
+logLine('----------------------------------------', '');
+
+/* ============ 展示实现源码（方便复制到笔记） ============ */
+const sourceEl = document.getElementById('source');
+const srcText = [
+  '// createStore 核心',
+  'function createStore(reducer, preloadedState, enhancer) {',
+  '  if (typeof preloadedState === "function" && enhancer === undefined) {',
+  '    enhancer = preloadedState; preloadedState = undefined;',
+  '  }',
+  '  if (enhancer) return enhancer(createStore)(reducer, preloadedState);',
+  '  let state = preloadedState, listeners = [];',
+  '  const getState = () => state;',
+  '  const subscribe = l => { listeners.push(l); return () => {',
+  '    const i = listeners.indexOf(l); if (i !== -1) listeners.splice(i, 1); }; };',
+  '  const dispatch = action => { state = reducer(state, action);',
+  '    listeners.slice().forEach(l => l()); return action; };',
+  '  dispatch({ type: "@@redux/INIT" });',
+  '  return { getState, subscribe, dispatch };',
+  '}',
+  '',
+  '// compose：从右往左组合',
+  'const compose = (...fns) => fns.length === 0 ? a => a',
+  '  : fns.reduce((a, b) => (...args) => a(b(...args)));',
+  '',
+  '// applyMiddleware：中间件加工 dispatch',
+  'const applyMiddleware = (...middlewares) => createStore => (reducer, pre) => {',
+  '  const store = createStore(reducer, pre);',
+  '  let dispatch = () => { throw new Error("构建中"); };',
+  '  const api = { getState: store.getState,',
+  '    dispatch: a => dispatch(a) };',
+  '  dispatch = compose(...middlewares.map(m => m(api)))(store.dispatch);',
+  '  return { ...store, dispatch };',
+  '};',
+  '',
+  '// logger：记录 action 前后 state',
+  'const logger = ({ getState }) => next => action => {',
+  '  console.log("[prev]", getState(), "[action]", action);',
+  '  const r = next(action);',
+  '  console.log("[next]", getState());',
+  '  return r;',
+  '};',
+  '',
+  '// thunk：action 是函数就执行它',
+  'const thunk = ({ dispatch, getState }) => next => action =>',
+  '  typeof action === "function" ? action(dispatch, getState) : next(action);'
+].join('\n');
+sourceEl.textContent = srcText;
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-import store from "../store";
-import { bindActionCreators } from "../redux";
-import { useSelector, useDispatch } from "../react-redux";
-import actionCreators from "../store/actionCreators/theme";
+import store from "../../store";
+import { bindActionCreators } from "../../redux";
+import { useSelector, useDispatch } from "../../react-redux";
+import actionCreators from "../../store/actionCreators/theme";
 const bundActionCreators = bindActionCreators(actionCreators, store.dispatch);
 export default function () {
   const theme = useSelector((state) => state.theme);

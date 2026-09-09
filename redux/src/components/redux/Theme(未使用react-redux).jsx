@@ -1,6 +1,6 @@
-import store from "../store";
-import { bindActionCreators } from "../redux";
-import actionCreators from "../store/actionCreators/theme";
+import store from "../../store";
+import { bindActionCreators } from "../../redux";
+import actionCreators from "../../store/actionCreators/theme";
 const bundActionCreators = bindActionCreators(actionCreators,store.dispatch)
 export default function () {
   const { count } = store.getState().theme;
