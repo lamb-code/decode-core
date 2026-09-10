@@ -5,3 +5,4 @@ export { default as Redirect } from "./Redirect";
 export { default as _ReactContext } from "./RouterContext";
 export { default as matchPath } from "./matchPath";
 export {default as withRouter} from './withRouter'
+export {useHistory,useLocation,useParams} from './hooks'
