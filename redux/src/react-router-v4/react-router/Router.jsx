@@ -1,6 +1,5 @@
 import React from "react";
 import RouterContext from "./RouterContext";
-import { match } from "path-to-regexp";
 export default class Router extends React.Component {
   static computedRootMatch(pathname) {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };

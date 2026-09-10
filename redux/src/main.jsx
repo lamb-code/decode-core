@@ -15,15 +15,18 @@ const root = createRoot(document.getElementById("root"));
 function render() {
   root.render(
     <Provider store={store}>
-      
       <HashRouter>
-      <ul>
-        <li>
-          <Link to='/'>首页</Link>
-        </li>
-        <li><Link to='/user'>用户</Link></li>
-        <li><Link to='/profile'>个人中心</Link></li>
-      </ul>
+        <ul>
+          <li>
+            <Link to="/">首页</Link>
+          </li>
+          <li>
+            <Link to="/user">用户</Link>
+          </li>
+          <li>
+            <Link to="/profile">个人中心</Link>
+          </li>
+        </ul>
         <Switch>
           <Route exact={true} path="/" component={Home}></Route>
           <Route path="/user" component={User}></Route>

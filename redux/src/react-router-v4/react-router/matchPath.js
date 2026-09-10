@@ -1,8 +1,10 @@
-import { pathToRegexp } from "path-to-regexp";
+import pathToRegexp from "path-to-regexp";
 //把路径转换成正则表达式
 function compilePath(path, options) {
   let keys = [];
-  let {regexp} = pathToRegexp(path, keys, options);
+  // path-to-regexp 1.x：直接返回 RegExp，keys 作为第二参数被填充
+  let regexp = pathToRegexp(path, keys, options);
+  console.log(regexp)
   return { keys, regexp };
 }
 //计算路径是否匹配
