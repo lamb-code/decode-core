@@ -7,6 +7,7 @@ export default class Route extends React.Component{
     
     render(){
         const {history,location}=this.context
+        console.log(this.props.path,'pathname')
         const {path,component:RouteComponent}=this.props
         // const match = location.pathname===path
         const match= matchPath(location.pathname,this.props)
@@ -16,7 +17,6 @@ export default class Route extends React.Component{
             routeProps.match=match
             element=<RouteComponent {...routeProps}/>
         }
-        console.log(element,'elemet')
         return element
     }
 

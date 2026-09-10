@@ -27,6 +27,7 @@ function matchPath(pathname, options = {}) {
     isExact, //是否精确匹配
     params: keys.reduce((memo, key, index) => {
       memo[key.name] = values[index];
+      return memo;   // ← 必须返回累加器
     }, {}),
   };
 }

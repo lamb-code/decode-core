@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route } from "./react-router-v4";
+import { HashRouter, Route, Switch, Redirect } from "./react-router-v4";
 import { observable } from "./mobx";
 import { Provider } from "./react-redux";
 import store from "./store";
@@ -9,17 +9,21 @@ import ZustandCouner from "./components/zustand/Auth";
 import Home from "./views/Home";
 import User from "./views/User";
 import Profile from "./views/Profile";
+import UserDetail from "./views/UserDetail";
 
 const root = createRoot(document.getElementById("root"));
-// console.log(HashRouter, "ROUTE");
 function render() {
   root.render(
     <Provider store={store}>
-      <BrowserRouter>
-        <Route path="/" component={Home}></Route>
-        <Route path="/user" component={User}></Route>
-        <Route path="/profile" component={Profile}></Route>
-      </BrowserRouter>
+      <HashRouter>
+        <Switch>
+          <Route exact={true} path="/"  component={Home}></Route>
+          <Route path="/user" component={User}></Route>
+          <Route path="/profile" component={Profile}></Route>
+          <Route path="/user/detail/:id" component={UserDetail}></Route>
+          <Redirect to="/"></Redirect>
+        </Switch>
+      </HashRouter>
       <Auth />
       <Theme />
       <ZustandCouner />
