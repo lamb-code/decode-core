@@ -3,7 +3,7 @@ export default function Link(props) {
   return (
     <RouterContext.Consumer>
       {(value) => {
-        console.log(value,'value')
+        console.log(props,'propspropspropsprops')
         return (
           <a
             {...props}

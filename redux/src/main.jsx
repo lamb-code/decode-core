@@ -1,5 +1,12 @@
 import { createRoot } from "react-dom/client";
-import { HashRouter, Route, Switch, Redirect, Link } from "./react-router-v4";
+import {
+  HashRouter,
+  Route,
+  Switch,
+  Redirect,
+  Link,
+  NavLink,
+} from "./react-router-v4";
 import { observable } from "./mobx";
 import { Provider } from "./react-redux";
 import store from "./store";
@@ -18,13 +25,32 @@ function render() {
       <HashRouter>
         <ul>
           <li>
-            <Link to="/">首页</Link>
+            <NavLink
+              activeStyle={{ color: "red" }}
+              activeClassName="current"
+              to="/"
+              exact={true}
+            >
+              首页
+            </NavLink>
           </li>
           <li>
-            <Link to="/user">用户</Link>
+            <NavLink
+              activeStyle={{ color: "red" }}
+              activeClassName="current"
+              to="/user"
+            >
+              用户
+            </NavLink>
           </li>
           <li>
-            <Link to="/profile">个人中心</Link>
+            <NavLink
+              activeStyle={{ color: "red" }}
+              activeClassName="current"
+              to="/profile"
+            >
+              个人中心
+            </NavLink>
           </li>
         </ul>
         <Switch>
