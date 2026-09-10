@@ -1,4 +1,4 @@
-import { _ReactContext as RouterContext } from "./RouterContext";
+import RouterContext from "./RouterContext";
 export default function withRouter(Component) {
   return (props) => {
     return (
