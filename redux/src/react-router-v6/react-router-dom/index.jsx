@@ -1,6 +1,6 @@
 import React from "react";
 import { createHashHistory, createBrowserHistory } from "../history";
-import { Router,useNavigate } from "../react-router";
+import { Router,Routes,Route,useNavigate,Outlet,useParams,useLocation } from "../react-router";
 export * from "../react-router";
 export function HashRouter({ children }) {
   let historyRef = React.useRef(null);
