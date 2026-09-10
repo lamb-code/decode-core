@@ -4,3 +4,4 @@ export { default as Switch } from "./Switch";
 export { default as Redirect } from "./Redirect";
 export { default as _ReactContext } from "./RouterContext";
 export { default as matchPath } from "./matchPath";
+export {default as withRouter} from './withRouter'
