@@ -1,7 +1,10 @@
-export function createBrowserHistory() {
+export function createBrowserHistory(props) {
   const globalHistory = window.history;
   let state;
   let listeners = [];
+  let message
+  let confirm = props.getUserConfirmation?props.getUserConfirmation:window.confirm
+
   function push(pathname, nextState) {
     const action = "PUSH";
     if (typeof pathname === "object") {
@@ -9,6 +12,11 @@ export function createBrowserHistory() {
       pathname = pathname.pathname;
     } else {
       state = nextState;
+    }
+    if(message){
+      let showMessage=message({pathname})
+      let allow = confirm(showMessage)
+      if(!allow) return
     }
     globalHistory.pushState(state, null, pathname);
     let location = { pathname, state };
@@ -39,6 +47,10 @@ export function createBrowserHistory() {
   function goForward() {
     globalHistory.go(1);
   }
+  function block(newMessage) {
+    message = newMessage;
+    return () => (message = null);
+  }
   const history = {
     action: "POP",
     push,
@@ -46,6 +58,7 @@ export function createBrowserHistory() {
     go,
     goBack,
     goForward,
+    block,
     location: {
       pathname: window.location.pathname,
       state: window.location.state,
