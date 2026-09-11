@@ -2,6 +2,7 @@ import React from "react";
 
 const NavigationContext = React.createContext({});
 const LocationContext = React.createContext({});
+const RouterContext = React.createContext({});
 export { NavigationContext, LocationContext };
 //变成正则表达式
 function compilePath(path, end) {
@@ -108,6 +109,18 @@ function matchRoutes(routes, pathname) {
   console.log(matches, "matches");
   return matches;
 }
+function _renderMatches(matches) {
+  if (!matches) return null;
+  return matches.reduceRight((outlet, match, index) => {
+    return (
+      <RouterContext.Provider
+        value={{ outlet, matches: matches.slice(0, index + 1) }}
+      >
+        {match.route.element}
+      </RouterContext.Provider>
+    );
+  }, null);
+}
 export function Router({ children, location, navigator }) {
   const navigationContext = React.useMemo(() => ({ navigator }), [navigator]);
   const locationContext = React.useMemo(() => ({ location }), [location]);
@@ -144,8 +157,8 @@ export function useRoutes(routes) {
   const matches = matchRoutes(routes, pathname);
 
   //渲染匹配的结果
-  // return _renderMatches(matches)
-  return null;
+  return _renderMatches(matches);
+  // return null;
 }
 
 export function Route() {}
@@ -183,8 +196,13 @@ export function useNavigate() {
 }
 
 export function Outlet() {
-  return null;
+  return useOutlet();
 }
 export function useParams() {
-  return { name: "test" };
+  const {matches} = React.useContext(RouterContext)
+  return matches[matches.length-1];
+}
+
+export function useOutlet(){
+  return React.useContext(RouterContext).outlet
 }
