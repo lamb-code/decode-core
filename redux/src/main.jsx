@@ -6,6 +6,7 @@ import {
   Route,
   Link,
   NavLink,
+  Navigate
 } from "./react-router-v6";
 
 import Home from "./views/v6/Home";
@@ -51,6 +52,7 @@ function render() {
         </Route>
         <Route path="/profile" element={<Profile />}></Route>
         <Route path="/post/:id" element={<Post />}></Route>
+        <Route path="*" element={<Navigate to='/user' />}></Route>
       </Routes>
     </BrowserRouter>
   );

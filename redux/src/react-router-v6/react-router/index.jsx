@@ -257,3 +257,11 @@ export function useParams() {
 export function useOutlet() {
   return React.useContext(RouterContext).outlet;
 }
+export function Navigate({to}) {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    console.log('kkkkkk')
+    navigate(to);
+  }, []);
+  return null;
+}
