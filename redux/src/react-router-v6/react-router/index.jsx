@@ -22,6 +22,9 @@ function compilePath(path, end) {
   if (end) {
     regexpSource += "\\/*$";
   }
+  if (path === "*") {
+    regexpSource = ".*";
+  }
   let matcher = new RegExp(regexpSource);
   return [matcher, paramNames];
 }
@@ -51,6 +54,37 @@ function joinPaths(paths) {
   //替换斜杠 如 ['/user','/add'] 替换成 /user//add =>/user/add
   return paths.join("/").replace(/\/\/+/g, "/");
 }
+//判断此路径分片是不死通配符*
+const isSplat = (s) => s === "*";
+const splatPenalty = -2;
+const indexRouteValue = 2;
+const dynamicSegmentValue = 3;
+const emptySegmentValue = 1;
+const staticSegmentValue = 10;
+//路径参数的正则表达式
+const paramRegexp = /^:\w+$/;
+function computeScore(path, index) {
+  const segments = path.split("/");
+  let initialScore = segments.length;
+  if (segments.some(isSplat)) {
+    initialScore += splatPenalty;
+  }
+  if (index) {
+    initialScore += indexRouteValue;
+  }
+  return segments
+    .filter((s) => !isSplat(s))
+    .reduce((score, segment) => {
+      return (
+        score +
+        (paramRegexp.test(segment)
+          ? dynamicSegmentValue
+          : segment === ""
+          ? emptySegmentValue
+          : staticSegmentValue)
+      );
+    }, initialScore);
+}
 //将多维变成一维
 function flattenRoutes(
   routes,
@@ -62,7 +96,7 @@ function flattenRoutes(
     //定义一个路由匹配的元数据：一个路由匹配一个meta
     let routeMeta = {
       route,
-      relativePath: route.path,
+      childrenIndex: index, //此路由在兄弟中的索引位置
     };
     let routePath = joinPaths([parentPath, route.path]);
     //把父亲的路由meta数组加上自己的meta数组变成一个新数组
@@ -73,6 +107,7 @@ function flattenRoutes(
     branches.push({
       routePath,
       routeMetas,
+      score: computeScore(routePath, index), //score计算分数用来排序
     });
   });
   return branches;
@@ -97,10 +132,28 @@ function matchRouteBranch(branch, pathname) {
   }
   return matches;
 }
+function compareIndexes(a, b) {
+  let sibling =
+    a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
+  return sibling ? a[a.length - 1] - b[b.length] : 0;
+}
+function rankRoutesBranches(branches) {
+  branches.sort((a, b) => {
+    return a.score !== b.score
+      ? b.score - a.score
+      : compareIndexes(
+          a.routeMetas.map((meata) => meata.childrenIndex),
+          b.routeMetas.map((meta) => meta.childrenIndex)
+        );
+  });
+}
 function matchRoutes(routes, pathname) {
   //打平所有的路径
   const branches = flattenRoutes(routes);
-  console.log(branches);
+  console.log(branches, "branches");
+  //为什么需要排序，比如路径是* 404页面防止用户 路由顺序乱写
+  rankRoutesBranches(branches);
+  console.log(branches,'排序后');
   //一次进行分支的匹配
   let matches = null;
   for (let i = 0; matches === null && i < branches.length; i++) {
@@ -199,10 +252,10 @@ export function Outlet() {
   return useOutlet();
 }
 export function useParams() {
-  const {matches} = React.useContext(RouterContext)
-  return matches[matches.length-1];
+  const { matches } = React.useContext(RouterContext);
+  return matches[matches.length - 1];
 }
 
-export function useOutlet(){
-  return React.useContext(RouterContext).outlet
+export function useOutlet() {
+  return React.useContext(RouterContext).outlet;
 }
