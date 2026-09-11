@@ -150,10 +150,8 @@ function rankRoutesBranches(branches) {
 function matchRoutes(routes, pathname) {
   //打平所有的路径
   const branches = flattenRoutes(routes);
-  console.log(branches, "branches");
   //为什么需要排序，比如路径是* 404页面防止用户 路由顺序乱写
   rankRoutesBranches(branches);
-  console.log(branches,'排序后');
   //一次进行分支的匹配
   let matches = null;
   for (let i = 0; matches === null && i < branches.length; i++) {
