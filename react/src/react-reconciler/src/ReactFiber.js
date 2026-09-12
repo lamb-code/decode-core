@@ -1,5 +1,10 @@
 import { NoFlags } from "./ReactFiberFlags";
-import { HostRoot } from "./ReactWorkTags";
+import {
+  HostComponent,
+  HostRoot,
+  HostText,
+  IndeterminateComponent,
+} from "./ReactWorkTags";
 
 export function FiberNode(tag, pendingProps, key) {
   this.tag = tag;
@@ -25,13 +30,17 @@ export function FiberNode(tag, pendingProps, key) {
   this.flags = NoFlags; //副作用的标识，表示要针对此fiber节点进行何种操作
   this.subtreeFlags = NoFlags; //子节点对应的副作用标识
   this.alternate = null;
+  this.index =0
 }
+
 function createFiber(tag, pendingProps, key) {
   return new FiberNode(tag, pendingProps, key);
 }
+
 export function createHostRootFiber() {
   return createFiber(HostRoot, null, null);
 }
+
 //基于老的fiber和新的属性创建新的fiber
 export function createWorkInProgress(current, pendingProps) {
   let workInProgress = current.alternate;
@@ -41,6 +50,7 @@ export function createWorkInProgress(current, pendingProps) {
     workInProgress.stateNode = current.stateNode;
     workInProgress.alternate = current;
     current.alternate = workInProgress;
+    // console.log(workInProgress, "kkkkkkkkkkk");
   } else {
     workInProgress.pendingProps = pendingProps;
     workInProgress.type = current.type;
@@ -54,4 +64,26 @@ export function createWorkInProgress(current, pendingProps) {
   workInProgress.sibling = current.sibling;
   workInProgress.index = current.index;
   return workInProgress;
+}
+
+//根据虚拟节点创建fiber节点
+export function createFiberFromElement(element) {
+  const { type, key, props } = element;
+  const pendingProps = props
+  return createFiberFromTypeAndProps(type, key, pendingProps);
+}
+
+function createFiberFromTypeAndProps(type, key, pendingProps) {
+  let tag = IndeterminateComponent;
+  if (typeof type === "string") {
+    //如果类型type是字符串 就表示是 span div 说明此组件是一个原生组件
+    tag = HostComponent;
+  }
+  const fiber = createFiber(tag, pendingProps, key);
+  fiber.type = type;
+  return fiber;
+}
+
+export function createFiberFromText(content) {
+  return createFiber(HostText, content, null);
 }
