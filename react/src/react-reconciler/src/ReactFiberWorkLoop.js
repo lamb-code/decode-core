@@ -17,6 +17,7 @@ function ensureRootIsSchduled(root) {
 function performConcurentWorkOnRoot(root) {
   //以同步的方式渲染根节点 初次渲染的时候 都是同步
   renderRootSync(root);
+  console.log(root,'mmmmmmmmmmmm')
 }
 function prepareFreshStack(root) {
   workInProgress = createWorkInProgress(root.current, null);

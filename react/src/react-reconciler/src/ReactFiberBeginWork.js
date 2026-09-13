@@ -1,7 +1,7 @@
 import logger from "shared/logger";
 import { HostComponent, HostRoot, HostText } from "./ReactWorkTags";
 import assign from "shared/assign";
-import { shouldSetTextContent } from "react-dom-bindings/src/ReactDOMHostConfig";
+import { shouldSetTextContent } from "react-dom-bindings/src/client/ReactDOMHostConfig";
 import { mountChildFibers, reconcileChildFibers } from "./ReactChildFiber";
 import { processUpdateQueue } from "./ReactFiberClassQueue";
 function reconcileChildren(current, workInProgress, nextChildren) {
