@@ -1,13 +1,18 @@
-export default function applyMiddleware(logger) {
+import compose from "./compose";
+
+export default function applyMiddleware(...middlewares) {
   return function (createStore) {
-    return function (reducer) {
-      const store = createStore(reducer);
+    return function (reducer, preloadedState) {
+      const store = createStore(reducer, preloadedState);
       let dispatch;
       let middlewareAPI = {
         getState: store.getState,
         dispatch: (action) => dispatch(action),
       };
-      dispatch = logger(middlewareAPI)(store.dispatch);
+      let chain = middlewares.map((middleware) => middleware(middlewareAPI));
+
+      // dispatch = logger(middlewareAPI)(store.dispatch);
+      dispatch = compose(...chain)(store.dispatch);
       return { ...store, dispatch };
     };
   };

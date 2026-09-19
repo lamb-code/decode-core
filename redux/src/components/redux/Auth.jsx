@@ -43,7 +43,8 @@ class Auth extends React.Component {
         <h2>手写 Redux Counter--Auth</h2>
         <div style={{ fontSize: 40, fontWeight: 700 }}>{this.props.count}</div>
         <button onClick={bundActionCreators.authInc}>+1</button>
-        <button onClick={bundActionCreators.authInc}>异步 +1</button>
+        <button onClick={bundActionCreators.thunkAdd}>异步 +1</button>
+        <button onClick={bundActionCreators.promiseAdd}>promise +1</button>
         <button onClick={() => store.dispatch({ type: "DECREMENT_AUTH" })}>
           -1
         </button>
