@@ -6,8 +6,10 @@ import {
   Route,
   Link,
   NavLink,
-  Navigate
+  Navigate,
+  useRoutes
 } from "./react-router-v6";
+import routes from "./routes";
 
 import Home from "./views/v6/Home";
 import User from "./views/v6/User";
@@ -16,12 +18,16 @@ import UserAdd from "./views/v6/UserAdd";
 import Post from "./views/v6/Post";
 import UserList from "./views/v6/UserList";
 import UserDetail from "./views/v6/UserDetail";
+import Protected from "./views/v6/Protected";
 const activeStyle = { color: "red" };
 const activeClassName = "active";
 const activeProps = {
   style: ({ isActive }) => (isActive ? activeStyle : {}),
   className: ({ isActive }) => (isActive ? activeClassName : ""),
 };
+function App(){
+  return useRoutes(routes)
+}
 const root = createRoot(document.getElementById("root"));
 function render() {
   root.render(
@@ -43,17 +49,18 @@ function render() {
           </NavLink>
         </li>
       </ul>
-      <Routes>
+      {/* <Routes>
         <Route path="/" element={<Home />}></Route>
         <Route path="/user" element={<User />}>
           <Route path="add" element={<UserAdd />}></Route>
           <Route path="list" element={<UserList />}></Route>
           <Route path="detail/:id" element={<UserDetail />}></Route>
         </Route>
-        <Route path="/profile" element={<Profile />}></Route>
+        <Route path="/profile" element={<Protected path='/profile' component={<Profile/>} />}></Route>
         <Route path="/post/:id" element={<Post />}></Route>
         <Route path="*" element={<Navigate to='/user' />}></Route>
-      </Routes>
+      </Routes> */}
+      <App/>
     </BrowserRouter>
   );
 }
