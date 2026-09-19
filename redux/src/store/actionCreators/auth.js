@@ -6,5 +6,19 @@ function authInc() {
 function authDec() {
   return { type: DECREMENT_AUTH };
 }
-const actionCreators = { authInc, authDec };
+function thunkAdd() {
+  return function (getState, dispatch) {
+    setTimeout(() => {
+      dispatch({ type: INCREMENT_AUTH });
+    }, 1000);
+  };
+}
+function promiseAdd() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ type: INCREMENT_AUTH });
+    }, 1000);
+  });
+}
+const actionCreators = { authInc, authDec, thunkAdd,promiseAdd };
 export default actionCreators;
