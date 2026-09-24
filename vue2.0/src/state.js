@@ -1,6 +1,6 @@
 import Dep from "./observe/dep";
 import { observe } from "./observe/index";
-import Watcher from "./observe/watcher";
+import Watcher, { nextTick } from "./observe/watcher";
 
 export function initState(vm) {
   const opts = vm.$options; //这就是为什么initMixin vm.$options = options; 方便取用户数据
@@ -93,5 +93,15 @@ function createWatcher(vm, key, handler) {
   if (typeof handler === "string") {
     handler = vm[handler];
   }
-  return vm.$watch(key,handler)
+  return vm.$watch(key, handler);
+}
+
+export function initStateMixin(Vue) {
+  Vue.prototype.$nextTick = nextTick;
+  //最终调用
+  Vue.prototype.$watch = function (exprOrFn, cb, options = {}) {
+    console.log(exprOrFn, cb, options);
+    //fistname的值变化了 直接执行cb函数即可
+    new Watcher(this, exprOrFn, { user: true }, cb);
+  };
 }
