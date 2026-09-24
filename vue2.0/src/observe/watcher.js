@@ -6,16 +6,26 @@ let id = 0;
 //怎么让数据每个属性和这个watcher关联起来？ 需要给每个属性增加一个dep,目的及时搜集watcher
 // watcher和dep对应关系？ 一个视图可以有多个属性(n个属性对应一个视图)，n个dep 对应一个watcher;一个属性可以对应多个视图即一个dep 对应多个watcher 总结多对多的关系
 class Watcher {
-  constructor(vm, fn, options) {
+  constructor(vm, exprOrFn, options, cb) {
     this.id = id++;
     this.renderWatcher = options;
-    this.getter = fn; // getter 意味着调用这个函数可以发生取值操作
+    //exprOrFn 可能还是个字符串
+    if (typeof exprOrFn === "string") {
+      this.getter = function () {
+        return vm[exprOrFn]
+      };
+    } else {
+      this.getter = exprOrFn; // getter 意味着调用这个函数可以发生取值操作
+    }
+    // this.getter = exprOrFn; // getter 意味着调用这个函数可以发生取值操作
     this.deps = [];
     this.depsId = new Set();
     this.lazy = options.lazy; //是用来控制计算属性watcher
+    this.cb = cb;
     this.dirty = this.lazy; //dirty也是用来控制计算属性watcher
-    this.vm=vm
-    this.lazy?undefined:this.get();
+    this.vm = vm;
+    this.user=options.user //标识是否是用户自己的watcher 如watch api的使用
+    this.value = this.lazy ? undefined : this.get();
   }
   addDep(dep) {
     let id = dep.id;
@@ -28,8 +38,8 @@ class Watcher {
   //专为计算属性watcher使用,获取到用户的函数的返回值，并且还要标记为脏
   evaluate() {
     this.value = this.get();
-    console.log(this.value,'kdlsjfl')
-    this.dirty=false
+    console.log(this.value, "kdlsjfl");
+    this.dirty = false;
   }
   get() {
     // Dep.target = this; //静态属性只有一份
@@ -39,25 +49,29 @@ class Watcher {
 
     // Dep.target = null;
     popTarget();
-    return value
+    return value;
   }
-  depend(){
-    let i = this.deps.length
-    while(i--){
-      this.deps[i].depend()
+  depend() {
+    let i = this.deps.length;
+    while (i--) {
+      this.deps[i].depend();
     }
   }
   update() {
-    if(this.lazy){
-      this.dirty=true //计算属性依赖的值发生变化了 就标识计算属性是脏的
-    }else{
+    if (this.lazy) {
+      this.dirty = true; //计算属性依赖的值发生变化了 就标识计算属性是脏的
+    } else {
       queueWatcher(this); //把当前的watcher暂存起来
       // this.get();
     }
-
   }
   run() {
-    this.get();
+    let oldValue=this.value;
+    let newValue = this.get();
+    
+    if(this.user){
+      this.cb.call(this.vm,newValue,oldValue)
+    }
   }
 }
 let queue = [];

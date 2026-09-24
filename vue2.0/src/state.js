@@ -85,7 +85,7 @@ function initWatch(vm) {
         createWatcher(vm, key, handler[i]);
       }
     } else {
-      createWatcher(vm, key, handler[i]);
+      createWatcher(vm, key, handler);
     }
   }
 }
