@@ -20,6 +20,7 @@ strats.components = function (parentVal, childVal) {
       res[key] = childVal[key];
     }
   }
+  return res
 };
 export function mergeOptions(parent, child) {
   const options = { ...parent, ...child };

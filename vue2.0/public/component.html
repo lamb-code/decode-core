@@ -8,31 +8,35 @@
 
   <body>
     <div id="app">
-      <div style="color: red">{{name}}
-      <my-button></my-button></div>
+      <div style="color: red">{{name}} <my-button></my-button></div>
     </div>
-    <!-- <script src="../dist/umd/vue.js"></script> -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.7.14/vue.js"></script>
+    <div id="root"></div>
+    <script src="../dist/umd/vue.js"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.7.14/vue.js"></script> -->
 
     <script>
       //组件的三大特性 自定义标签 组件里面有自己的属性和事件 组件的插槽
       // 声明组件 全局组件和局部组件 注册组件其实就是构造一个子类 内部会默认调用Vue.extend api
-      Vue.component("my-button", {
-        template: "<button>我是全局按钮</button>",
-      });
-      new Vue({
-        el: "#app",
-        data() {
-          return {
-            name: "jane",
-          };
-        },
-        components: {
-          "my-button": {
-            template: "<button>我是局部按钮</button>",
-          },
-        },
-      });
+      let Sub = Vue.extend({
+        template:'<button>点我啊</button>'
+      })
+      new Sub().$mount('#root')
+      // Vue.component("my-button", {
+      //   template: "<button>我是全局按钮</button>",
+      // });
+      // new Vue({
+      //   el: "#app",
+      //   data() {
+      //     return {
+      //       name: "jane",
+      //     };
+      //   },
+      //   components: {
+      //     "my-button": {
+      //       template: "<button>我是局部按钮</button>",
+      //     },
+      //   },
+      // });
     </script>
   </body>
 </html>

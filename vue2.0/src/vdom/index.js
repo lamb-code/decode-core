@@ -10,6 +10,8 @@ export function createElementVNode(vm, tag, data, ...children) {
   if (key) {
     delete data.key;
   }
+  //怎么判断是原生标签和组件? 用low的办法isReservedTag
+  //原生标签
   if (isReservedTag(tag)) {
     return vnode(vm, tag, key, data, children);
   } else {
