@@ -2,16 +2,18 @@ import Watcher from "./observe/watcher";
 import { createElementVNode, createTextVNode, isSameVnode } from "./vdom";
 import { createElm, patch } from "./vdom/patch";
 
-
-
 export function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vnode) {
     const vm = this;
     const el = vm.$el;
-    // console.log("vnode:", el);
-
-    // patch既有初始化的功能 又有更新的功能
-    vm.$el = patch(el, vnode);
+    const prevVnode = vm._vnode;
+    vm._vnode = vnode; //把组件第一次产生的虚拟节点保存到_vnode上
+    if (prevVnode) {
+      vm.$el = patch(prevVnode, vnode);
+    } else {
+      // patch既有初始化的功能 又有更新的功能
+      vm.$el = patch(el, vnode);
+    }
   };
   Vue.prototype._c = function () {
     return createElementVNode(this, ...arguments);

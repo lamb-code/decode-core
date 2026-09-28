@@ -8,7 +8,7 @@
 
   <body>
     <div id="app">
-      <div style="color: red">{{firstName}}</div>
+      <div style="color: red">{{name}}</div>
     </div>
     <script src="../dist/umd/vue.js"></script>
     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.7.14/vue.js"></script> -->
@@ -16,6 +16,14 @@
     <script>
       //实现diff算法
       //在之前的更新中每次更新，都会产生新的虚拟节点，通过
+      new Vue({
+        el:'#app',
+        data() {
+          return {
+            name:'jane'
+          }
+        },
+      })
 
     </script>
   </body>
